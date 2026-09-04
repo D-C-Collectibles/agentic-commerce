@@ -73,6 +73,7 @@
     ]
   },
   "enabledPlugins": {
-    "circle-skills@circle": true
+    "circle-skills@circle": true,
+    "paradigm@a-paradigm": true
   }
 }

@@ -1,0 +1,53 @@
+checkout:
+  symbol: "#checkout-route"
+  description: >
+    HTTP entry point for $checkout-flow. Recomputes price server-side, enforces
+    ^checkout-authorized, and hands off to #wallet-service for the actual transfer.
+    Full design in .paradigm/specs/wallet-checkout.md.
+  gates: [^authenticated, ^checkout-authorized]
+  signals: [!payment-submitted]
+  implementation_plan:
+    authenticated: >
+      HACKATHON STAND-IN, not real auth. Read `Authorization: Bearer <userId>` header;
+      401 if missing/empty. The bearer value IS the user id, unsigned, no expiry, no
+      lookup table. Comment in code must flag this and note a real implementation needs
+      login + sessions/JWT + a users table + expiry/revocation.
+    checkout_authorized: >
+      Request body: { sku: string, quantity: number, checkoutConfirmed?: boolean }.
+      1) Look up sku in new `products` table (sku, name, price_usdc); 404 if unknown.
+      2) amountUsdc = price_usdc * quantity — never trust a client-sent amount.
+      3) destinationAddress comes from server-side MERCHANT_PAYOUT_ADDRESS env var, never
+         from the request body.
+      4) Per-tx cap $50: reject (402, cap:"per_tx") if amountUsdc > 50.
+      5) Daily cap $200: reject (402, cap:"daily") if amountUsdc + SUM(amount_usdc) from
+         this user's `orders` rows with status in ('submitted','confirmed') and
+         created_at > now() - interval '1 day' would exceed 200.
+      6) Auto-approve threshold $10: if amountUsdc > 10 and checkoutConfirmed is not
+         `true`, respond 428 confirmation_required without calling transferUsdc().
+      7) On pass: insert an `orders` row (status 'pending', fresh idempotency_key), call
+         transferUsdc(), then update the row to circle_transaction_id + status
+         'submitted'. Respond 200 { orderId, circleTransactionId, amountUsdc, state }.
+    new_tables: [products, orders]
+
+circle-webhook:
+  symbol: "#circle-webhook-route"
+  description: >
+    Receives Circle transaction-state webhooks. Source of truth for terminal
+    payment state (COMPLETE/FAILED/DENIED/CANCELLED); updates orders idempotently
+    by Circle transaction id. Full design in .paradigm/specs/wallet-checkout.md.
+  gates: [^webhook-signature-verified]
+  signals: [!payment-confirmed, !payment-failed]
+  implementation_plan:
+    webhook_signature_verified: >
+      Verify X-Circle-Signature (base64 ECDSA over the RAW body) against the public key
+      for X-Circle-Key-Id (GET Circle's /v2/notifications/publicKey/{keyId}, cache
+      in-process). 401 on missing headers, unknown key id, or bad signature. Requires raw
+      body bytes — server/src/index.ts's global express.json() currently discards these;
+      switch to express.json({ verify: (req,_res,buf) => { req.rawBody = buf } }) (or a
+      route-scoped express.raw()) so this route can verify before parsing.
+    order_update: >
+      Map Circle's transactionId + state to an `orders` row via
+      `update orders set status = $1, updated_at = now() where circle_transaction_id = $2`
+      (COMPLETE -> confirmed, FAILED/DENIED/CANCELLED -> matching lowercase status).
+      Idempotent by construction — replays set the same terminal value. Emit
+      !payment-confirmed / !payment-failed after the row update.

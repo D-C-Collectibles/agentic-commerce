@@ -70,6 +70,9 @@ web_modules/
 .env.*
 !.env.example
 
+# Circle entity secret recovery file — never commit
+server/recovery/
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -127,6 +130,10 @@ dist
 
 # pnpm
 .pnpm-store
+
+# this repo uses pnpm — never commit npm's or yarn's lockfile
+package-lock.json
+yarn.lock
 
 # yarn v3
 .pnp.*

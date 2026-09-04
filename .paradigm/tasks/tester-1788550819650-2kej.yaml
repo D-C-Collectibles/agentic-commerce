@@ -1,0 +1,103 @@
+id: tester-1788550819650-2kej
+agent: tester
+model: haiku
+status: pending
+created: '2026-09-04T19:40:19.650Z'
+task: >-
+  Test and validate: Design (plan/spec only, do NOT write or edit any files) a
+  wallet-abstraction architecture so that Claude Code agent sessions can perform
+  e-commerce checkouts on behalf of users, using Circle Developer-Controlled
+  Wallets (server-custodied, entity-secret based) for custody/signing and Arc
+  (or other EVM chain via Circle) for USDC settlement. Constraints: current repo
+  is a minimal Express+TS server (server/src/index.ts, db.ts) backed by Neon
+  Postgres, no auth/wallet code yet exists. Must follow this repo's Paradigm
+  conventions (#component/^gate/!signal/ symbols, portal.yaml gates for
+  protected routes, .purpose files). Must propose: (1) wallet custody model &
+  where entity secret lives, (2) spending-policy/guardrails so an LLM agent
+  can't overspend (per-tx/daily caps, human confirmation for checkout), (3)
+  checkout flow as a  spanning components (cart/order -> price check -> policy
+  check -> Circle wallet transfer -> order confirmation), (4) which portal.yaml
+  gates protect the checkout route, (5) webhook handling for async transaction
+  settlement, (6) testnet-first rollout plan. Reviewer agent should flag
+  security risks (agent-authorized fund movement, key custody,
+  replay/idempotency).
+context:
+  systemPrompt: >
+    # Tester Agent Context
+
+
+    > Project: agentic-commerce
+
+    > Discipline: backend
+
+
+    ## Project Overview
+
+
+    This project uses Paradigm for structured AI-assisted development.
+
+    All context, symbols, and specifications live in the .paradigm/ directory.
+
+
+
+    ## Symbol System
+
+
+    | Symbol | Meaning | Description |
+
+    |--------|---------|-------------|
+
+    | `#` | Component | Any documented code unit (feature, service, module,
+    integration) |
+
+    | `$` | Flow | Multi-step processes or user journeys |
+
+    | `^` | Gate | Access control points and authorization rules |
+
+    | `!` | Signal | Events emitted for side effects |
+
+    | `~` | Aspect | Cross-cutting rules with required code anchors |
+
+
+    ## Symbols in Scope
+
+
+    - `#component` (component)
+
+    - `^gate` (gate)
+
+    - `!signal` (signal)
+
+
+    ## Tips for This Role
+
+
+    - Run tests and verify health status
+
+    - Check portal validations
+
+    - Update health.yaml when verified
+
+    - Report issues with reproduction steps
+  symbols:
+    - '#component'
+    - ^gate
+    - '!signal'
+role: >-
+  You verify implementations work correctly.
+
+  Run tests, check portal validations, verify health status.
+
+  Report issues back to Builder. Update health.yaml when verified.
+
+  Repo rule: every prompt used for this work must be logged via `npm run
+  log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+focus:
+  reads:
+    - tests/**
+    - portal.yaml
+    - health.yaml
+    - '#components'
+  writes:
+    - tests/**
+    - health.yaml

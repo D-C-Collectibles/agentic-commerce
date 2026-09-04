@@ -1,3 +1,18 @@
 version: "2.0"
-gates: {}
-routes: {}
+gates:
+  ^authenticated:
+    description: Valid signed-in user session required.
+  ^checkout-authorized:
+    description: >
+      Per-user spending-policy check (per-tx/daily USDC caps) plus an explicit
+      !checkout-confirmed signal from the user for amounts above the auto-approve
+      threshold. Runs after ^authenticated, before any wallet transfer is submitted.
+  ^webhook-signature-verified:
+    description: >
+      Verifies Circle's X-Circle-Signature / X-Circle-Key-Id headers. Used instead of
+      ^authenticated on webhook routes, which have no user session.
+routes:
+  POST /checkout:
+    gates: [^authenticated, ^checkout-authorized]
+  POST /webhooks/circle:
+    gates: [^webhook-signature-verified]

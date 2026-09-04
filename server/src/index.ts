@@ -1,9 +1,19 @@
 import "dotenv/config";
 import express from "express";
 import { pool } from "./db.js";
+import { checkoutRouter } from "./routes/checkout.js";
+import { webhooksRouter } from "./routes/webhooks.js";
 
 const app = express();
-app.use(express.json());
+app.use(
+  express.json({
+    verify: (req: express.Request, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
+app.use(checkoutRouter);
+app.use(webhooksRouter);
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });

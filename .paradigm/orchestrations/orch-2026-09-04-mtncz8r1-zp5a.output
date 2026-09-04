@@ -1,0 +1,132 @@
+
+▶ architect: Design and specify: Design (plan/spec only, do NOT write or edit any files) a wallet-abstraction architecture so that Claude Code agent sessions can perform e-commerce checkouts on behalf of users, using Circle Developer-Controlled Wallets (server-custodied, entity-secret based) for custody/signing and Arc (or other EVM chain via Circle) for USDC settlement. Constraints: current repo is a minimal Express+TS server (server/src/index.ts, db.ts) backed by Neon Postgres, no auth/wallet code yet exists. Must follow this repo's Paradigm conventions (#component/^gate/!signal/ symbols, portal.yaml gates for protected routes, .purpose files). Must propose: (1) wallet custody model & where entity secret lives, (2) spending-policy/guardrails so an LLM agent can't overspend (per-tx/daily caps, human confirmation for checkout), (3) checkout flow as a  spanning components (cart/order -> price check -> policy check -> Circle wallet transfer -> order confirmation), (4) which portal.yaml gates protect the checkout route, (5) webhook handling for async transaction settlement, (6) testnet-first rollout plan. Reviewer agent should flag security risks (agent-authorized fund movement, key custody, replay/idempotency).
+
+▶ security: Review security aspects of: Design (plan/spec only, do NOT write or edit any files) a wallet-abstraction architecture so that Claude Code agent sessions can perform e-commerce checkouts on behalf of users, using Circle Developer-Controlled Wallets (server-custodied, entity-secret based) for custody/signing and Arc (or other EVM chain via Circle) for USDC settlement. Constraints: current repo is a minimal Express+TS server (server/src/index.ts, db.ts) backed by Neon Postgres, no auth/wallet code yet exists. Must follow this repo's Paradigm conventions (#component/^gate/!signal/ symbols, portal.yaml gates for protected routes, .purpose files). Must propose: (1) wallet custody model & where entity secret lives, (2) spending-policy/guardrails so an LLM agent can't overspend (per-tx/daily caps, human confirmation for checkout), (3) checkout flow as a  spanning components (cart/order -> price check -> policy check -> Circle wallet transfer -> order confirmation), (4) which portal.yaml gates protect the checkout route, (5) webhook handling for async transaction settlement, (6) testnet-first rollout plan. Reviewer agent should flag security risks (agent-authorized fund movement, key custody, replay/idempotency).
+[security] Task created: security-1788550819624-uyxo
+
+[security] 
+---
+**To execute this agent, use the Task tool with:**
+```
+You are the SECURITY agent.
+
+## Your Role
+You audit for security issues, especially around ^gates.
+Review auth flows, check for vulnerabilities.
+Flag issues but do NOT implement fixes - hand to Builder for that.
+Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+
+## Task
+Review security aspects of: Design (plan/spec only, do NOT write or edit any files) a wallet-abstraction architecture so that Claude Code agent sessions can perform e-commerce checkouts on behalf of users, using Circle Developer-Controlled Wallets (server-custodied, entity-secret based) for custody/signing and Arc (or other EVM chain via Circle) for USDC settlement. Constraints: current repo is a minimal Express+TS server (server/src/index.ts, db.ts) backed by Neon Postgres, no auth/wallet code yet exists. Must follow this repo's Paradigm conventions (#component/^gate/!signal/ symbols, portal.yaml gates for protected routes, .purpose files). Must propose: (1) wallet custody model & where entity secret lives, (2) spending-policy/guardrails so an LLM agent can't overspend (per-tx/daily caps, human confirmation for checkout), (3) checkout flow as a  spanning components (cart/order -> price check -> policy check -> Circle wallet transfer -> order confirmation), (4) which portal.yaml gates protect the checkout route, (5) webhook handling for async transaction settlement, (6) testnet-first rollout plan. Reviewer agent should flag security risks (agent-authorized fund movement, key custody, replay/idempotency).
+
+## Symbols in Scope
+#component, ^gate, !signal
+
+## Focus Areas
+Read: ^gates, !signals, portal.yaml, src/**
+Write: security/*.md
+```
+---
+
+[security] [completion-check] Agent "security" downgraded from success → partial: no meaningful output detected.
+✓ security completed
+[architect] Task created: architect-1788550819638-rvuh
+
+[architect] 
+---
+**To execute this agent, use the Task tool with:**
+```
+You are the ARCHITECT agent.
+
+## Your Role
+You design system architecture, write specifications, and plan features.
+You do NOT write implementation code - that's the Builder's job.
+When your spec is ready, hand off to Builder with 'paradigm team handoff --to builder'.
+Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+
+## Task
+Design and specify: Design (plan/spec only, do NOT write or edit any files) a wallet-abstraction architecture so that Claude Code agent sessions can perform e-commerce checkouts on behalf of users, using Circle Developer-Controlled Wallets (server-custodied, entity-secret based) for custody/signing and Arc (or other EVM chain via Circle) for USDC settlement. Constraints: current repo is a minimal Express+TS server (server/src/index.ts, db.ts) backed by Neon Postgres, no auth/wallet code yet exists. Must follow this repo's Paradigm conventions (#component/^gate/!signal/ symbols, portal.yaml gates for protected routes, .purpose files). Must propose: (1) wallet custody model & where entity secret lives, (2) spending-policy/guardrails so an LLM agent can't overspend (per-tx/daily caps, human confirmation for checkout), (3) checkout flow as a  spanning components (cart/order -> price check -> policy check -> Circle wallet transfer -> order confirmation), (4) which portal.yaml gates protect the checkout route, (5) webhook handling for async transaction settlement, (6) testnet-first rollout plan. Reviewer agent should flag security risks (agent-authorized fund movement, key custody, replay/idempotency).
+
+## Context from previous agents:
+## Auto-Ripple Analysis
+
+The following symbols are affected by this refactoring:
+
+- **#component**: Check dependencies before renaming/moving
+- **^gate**: Check dependencies before renaming/moving
+- **!signal**: Check dependencies before renaming/moving
+
+**Recommendation:** Run `paradigm_ripple` for each symbol before making changes.
+
+## Symbols in Scope
+#component, ^gate, !signal
+
+## Focus Areas
+Read: @features, $flows, specs/*.md, health.yaml
+Write: specs/*.md, .purpose
+```
+---
+
+✓ architect completed
+
+▶ reviewer: Review: Design (plan/spec only, do NOT write or edit any files) a wallet-abstraction architecture so that Claude Code agent sessions can perform e-commerce checkouts on behalf of users, using Circle Developer-Controlled Wallets (server-custodied, entity-secret based) for custody/signing and Arc (or other EVM chain via Circle) for USDC settlement. Constraints: current repo is a minimal Express+TS server (server/src/index.ts, db.ts) backed by Neon Postgres, no auth/wallet code yet exists. Must follow this repo's Paradigm conventions (#component/^gate/!signal/ symbols, portal.yaml gates for protected routes, .purpose files). Must propose: (1) wallet custody model & where entity secret lives, (2) spending-policy/guardrails so an LLM agent can't overspend (per-tx/daily caps, human confirmation for checkout), (3) checkout flow as a  spanning components (cart/order -> price check -> policy check -> Circle wallet transfer -> order confirmation), (4) which portal.yaml gates protect the checkout route, (5) webhook handling for async transaction settlement, (6) testnet-first rollout plan. Reviewer agent should flag security risks (agent-authorized fund movement, key custody, replay/idempotency).
+
+▶ tester: Test and validate: Design (plan/spec only, do NOT write or edit any files) a wallet-abstraction architecture so that Claude Code agent sessions can perform e-commerce checkouts on behalf of users, using Circle Developer-Controlled Wallets (server-custodied, entity-secret based) for custody/signing and Arc (or other EVM chain via Circle) for USDC settlement. Constraints: current repo is a minimal Express+TS server (server/src/index.ts, db.ts) backed by Neon Postgres, no auth/wallet code yet exists. Must follow this repo's Paradigm conventions (#component/^gate/!signal/ symbols, portal.yaml gates for protected routes, .purpose files). Must propose: (1) wallet custody model & where entity secret lives, (2) spending-policy/guardrails so an LLM agent can't overspend (per-tx/daily caps, human confirmation for checkout), (3) checkout flow as a  spanning components (cart/order -> price check -> policy check -> Circle wallet transfer -> order confirmation), (4) which portal.yaml gates protect the checkout route, (5) webhook handling for async transaction settlement, (6) testnet-first rollout plan. Reviewer agent should flag security risks (agent-authorized fund movement, key custody, replay/idempotency).
+[reviewer] Task created: reviewer-1788550819646-15q8
+
+[reviewer] 
+---
+**To execute this agent, use the Task tool with:**
+```
+You are the REVIEWER agent.
+
+## Your Role
+You review code for correctness, security, and adherence to specs.
+Check all ^gate requirements are met.
+Approve or request changes. Do NOT implement fixes yourself.
+Hand back to Builder for fixes, or to Tester when approved.
+Repo rule: before approving or a PR is opened, confirm prompts.jsonl has an entry for every
+prompt used on this branch (`npm run log-prompt -- "<prompt>"`). Block approval if missing. See CLAUDE.md.
+
+## Task
+Review: Design (plan/spec only, do NOT write or edit any files) a wallet-abstraction architecture so that Claude Code agent sessions can perform e-commerce checkouts on behalf of users, using Circle Developer-Controlled Wallets (server-custodied, entity-secret based) for custody/signing and Arc (or other EVM chain via Circle) for USDC settlement. Constraints: current repo is a minimal Express+TS server (server/src/index.ts, db.ts) backed by Neon Postgres, no auth/wallet code yet exists. Must follow this repo's Paradigm conventions (#component/^gate/!signal/ symbols, portal.yaml gates for protected routes, .purpose files). Must propose: (1) wallet custody model & where entity secret lives, (2) spending-policy/guardrails so an LLM agent can't overspend (per-tx/daily caps, human confirmation for checkout), (3) checkout flow as a  spanning components (cart/order -> price check -> policy check -> Circle wallet transfer -> order confirmation), (4) which portal.yaml gates protect the checkout route, (5) webhook handling for async transaction settlement, (6) testnet-first rollout plan. Reviewer agent should flag security risks (agent-authorized fund movement, key custody, replay/idempotency).
+
+## Symbols in Scope
+#component, ^gate, !signal
+
+## Focus Areas
+Read: ^gates, !signals, portal.yaml, src/**, specs/*.md
+Write: reviews/*.md
+```
+---
+
+[reviewer] [completion-check] Agent "reviewer" downgraded from success → partial: no meaningful output detected.
+✓ reviewer completed
+[tester] Task created: tester-1788550819650-2kej
+
+[tester] 
+---
+**To execute this agent, use the Task tool with:**
+```
+You are the TESTER agent.
+
+## Your Role
+You verify implementations work correctly.
+Run tests, check portal validations, verify health status.
+Report issues back to Builder. Update health.yaml when verified.
+Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+
+## Task
+Test and validate: Design (plan/spec only, do NOT write or edit any files) a wallet-abstraction architecture so that Claude Code agent sessions can perform e-commerce checkouts on behalf of users, using Circle Developer-Controlled Wallets (server-custodied, entity-secret based) for custody/signing and Arc (or other EVM chain via Circle) for USDC settlement. Constraints: current repo is a minimal Express+TS server (server/src/index.ts, db.ts) backed by Neon Postgres, no auth/wallet code yet exists. Must follow this repo's Paradigm conventions (#component/^gate/!signal/ symbols, portal.yaml gates for protected routes, .purpose files). Must propose: (1) wallet custody model & where entity secret lives, (2) spending-policy/guardrails so an LLM agent can't overspend (per-tx/daily caps, human confirmation for checkout), (3) checkout flow as a  spanning components (cart/order -> price check -> policy check -> Circle wallet transfer -> order confirmation), (4) which portal.yaml gates protect the checkout route, (5) webhook handling for async transaction settlement, (6) testnet-first rollout plan. Reviewer agent should flag security risks (agent-authorized fund movement, key custody, replay/idempotency).
+
+## Symbols in Scope
+#component, ^gate, !signal
+
+## Focus Areas
+Read: tests/**, portal.yaml, health.yaml, #components
+Write: tests/**, health.yaml
+```
+---
+
+[tester] [completion-check] Agent "tester" downgraded from success → partial: no meaningful output detected.
+✓ tester completed

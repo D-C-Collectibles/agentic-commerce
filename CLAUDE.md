@@ -14,9 +14,15 @@ All context, symbols, and specifications live in the .paradigm/ directory.
 See [CONVENTIONS.md](./CONVENTIONS.md) for naming, comments, DRY, maintainability, and review
 rules. Follow it for all code in this repo.
 
+## Package manager
+
+This repo uses **pnpm**, not npm — `pnpm install`, `pnpm run <script>` (or `pnpm <script>`), never
+`npm install`/`npm run`. Only `pnpm-lock.yaml` is committed; do not generate or commit a
+`package-lock.json`.
+
 ## Backend
 
-`server/` is a plain Express + TypeScript API server (`npm install && npm run dev` inside
+`server/` is a plain Express + TypeScript API server (`pnpm install && pnpm dev` inside
 `server/`). It connects to the Neon Postgres project `agentic-commerce` via `DATABASE_URL` (see
 `server/.env.example`).
 
@@ -31,7 +37,7 @@ This happens automatically in Claude Code via a `UserPromptSubmit` hook
 for Claude Code sessions started after this hook was installed. For other tools/manual logging:
 
 ```
-npm run log-prompt -- "the prompt text"
+pnpm log-prompt -- "the prompt text"
 ```
 
 **Rule: before opening a PR, confirm every prompt used for that branch's work has a matching
@@ -120,6 +126,24 @@ Symbols: #payment-form, #apple-pay-button, $checkout-flow, !payment-method-added
 1. Complex task (3+ files)? → `paradigm_orchestrate_inline` mode="plan"
 2. Affects symbols? → `paradigm_ripple`
 3. Adds endpoints? → `paradigm_gates_for_route`
+
+## Launching Paradigm Agents (architect/builder/reviewer/security/tester)
+
+`paradigm_orchestrate_inline` mode="execute" always returns `subagentType: "general-purpose"`
+in its stage output — this is for portability across IDEs without Task-tool support and does
+**not** mean the real agents aren't available. Do not follow that field literally.
+
+The real agents are registered Claude Code subagent definitions at
+`~/.claude/plugins/marketplaces/a-paradigm/plugins/paradigm/agents/{name}.md`, each with the
+correct tool restrictions for its role (e.g. `architect`/`reviewer`/`security` are
+Read/Grep/Glob-only and cannot Edit/Write/Bash; `builder`/`tester` can). When launching a stage
+from an orchestration plan, pass the plan's `agent` field (e.g. `security`, `builder`) directly
+as `subagent_type` — do not fall back to `general-purpose` with an injected prompt.
+
+These subagent types are only registered when the `paradigm@a-paradigm` plugin is loaded at
+session startup. If a plugin was just enabled/updated mid-session, or the agent type isn't in
+your available agent types, tell the user a session restart is required rather than silently
+using `general-purpose` as a substitute.
 
 ## Automatic Enforcement (Hooks)
 
