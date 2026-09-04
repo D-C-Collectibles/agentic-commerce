@@ -1,0 +1,18 @@
+version: '1.0'
+schema: v0-experimental
+claims:
+  aspect-coverage:
+    claimant: compliance
+    severity: advise
+    since: '2026-09-04T17:39:55.779Z'
+    source: archetype-default
+  aspect-drift:
+    claimant: compliance
+    severity: advise
+    since: '2026-09-04T17:39:55.779Z'
+    source: archetype-default
+  anchor-staleness:
+    claimant: compliance
+    severity: advise
+    since: '2026-09-04T17:39:55.779Z'
+    source: archetype-default

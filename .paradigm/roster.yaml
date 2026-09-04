@@ -1,0 +1,14 @@
+version: '1.0'
+project: agentic-commerce
+type: generic
+active:
+  - advocate
+  - architect
+  - builder
+  - compliance
+  - debugger
+  - documentor
+  - qa
+  - reviewer
+  - security
+  - tester

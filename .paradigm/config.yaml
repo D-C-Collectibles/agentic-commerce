@@ -1,0 +1,130 @@
+version: "1.0"
+project: agentic-commerce
+discipline: backend
+agent-guidelines:
+  overview: |
+    This project uses Paradigm for structured AI-assisted development.
+    All context, symbols, and specifications live in the .paradigm/ directory.
+  how-to-use:
+    - Check .paradigm/specs/ for philosophy and patterns before making changes
+    - "Reference symbols using prefixes: #component ^gate !signal $flow ~aspect"
+    - Use the Paradigm logger instead of raw console.log/print statements
+    - Run `paradigm probe` with screenshots to map UI to code
+    - Check .paradigm/docs/ for command reference and troubleshooting
+    - Read .index.yaml files first when navigating documentation
+    - Use `paradigm team handoff` when approaching context limits
+  update-rules:
+    - When adding a feature, create/update the nearest .purpose file
+    - When adding authorization, update portal.yaml
+    - When exploring ideas, use [idea] tag on any symbol
+    - Always update references when renaming symbols
+symbol-system:
+  "#":
+    name: Component
+    description: Any documented code unit (feature, service, module, integration)
+    owner: purpose
+    examples:
+      - "#checkout"
+      - "#login-handler"
+      - "#Button"
+      - "#stripe-client"
+  $:
+    name: Flow
+    description: Multi-step processes or user journeys
+    owner: shared
+    examples:
+      - $checkout-flow
+      - $onboarding
+      - $auth-flow
+  ^:
+    name: Gate
+    description: Access control points and authorization rules
+    owner: portal
+    examples:
+      - ^authenticated
+      - ^admin-only
+      - ^rate-limited
+  "!":
+    name: Signal
+    description: Events emitted for side effects
+    owner: purpose
+    examples:
+      - "!login-success"
+      - "!payment-failed"
+      - "!rate-limited"
+  "~":
+    name: Aspect
+    description: Cross-cutting rules with required code anchors
+    owner: purpose
+    examples:
+      - ~audit-required
+      - ~rate-limited
+      - ~cached
+logging:
+  enforce: true
+  default-level: debug
+  symbol-mapping:
+    services/**: "#"
+    routes/**: "#"
+    api/**: "#"
+    models/**: "#"
+    lib/**: "#"
+    utils/**: "#"
+    core/**: "#"
+    config/**: "#"
+    middleware/**: ^
+    auth/**: ^
+    guards/**: ^
+    policies/**: ^
+    events/**: "!"
+    handlers/**: "!"
+    listeners/**: "!"
+    flows/**: $
+    workflows/**: $
+    pipelines/**: $
+    aspects/**: "~"
+    rules/**: "~"
+probe:
+  enabled: true
+  auto-include: true
+purpose-required:
+  - pattern: src/services/*
+    depth: 1
+  - pattern: src/routes/*
+    depth: 1
+  - pattern: src/api/*
+    depth: 1
+conventions:
+  - Use kebab-case for all symbol IDs (feature-name, not featureName)
+  - Document flows when logic spans 3+ components
+  - Reference related items using symbol prefixes (# $ ^ ! ~)
+  - Add descriptions to all components and gates
+  - Update .purpose files when changing feature behavior
+  - Keep gates minimal - one responsibility per gate
+  - Use signals for side effects, not direct state mutations
+  - ALWAYS use Paradigm logger, NEVER raw console.log/print
+ai-agent:
+  model: claude-opus-4.6
+  context-window: 200000
+context:
+  enabled: true
+  index-file: .index.yaml
+  docs-path: docs/
+model-resolution:
+  tier-1: sonnet
+  tier-2: sonnet
+  tier-3: sonnet
+enforcement:
+  level: none
+  checks: {}
+  orchestration:
+    threshold: 3
+    detection: git-diff
+    exempt:
+      - "*.md"
+      - "*.yaml"
+      - "*.yml"
+      - .purpose
+metrics:
+  remote_consent: pending
+  local_snapshots_enabled: true

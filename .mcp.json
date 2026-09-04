@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "paradigm": {
+      "command": "paradigm-mcp",
+      "args": [
+        "."
+      ],
+      "cwd": "/Users/dchan/src/agentic-commerce"
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(paradigm *)"
+    ]
+  }
+}

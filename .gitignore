@@ -141,3 +141,10 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Local runtime/telemetry artifacts (headroom, paradigm event logs)
+.claude/.headroom_wrap_*
+.paradigm/.metrics-salt
+.paradigm/events/
+.paradigm/university/.metrics/
+.paradigm/.team-reminded

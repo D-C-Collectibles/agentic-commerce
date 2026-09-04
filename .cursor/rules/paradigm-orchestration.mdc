@@ -1,0 +1,81 @@
+---
+description: Multi-agent orchestration - use when task affects 3+ files, involves security AND implementation, or spans multiple features. Call paradigm_orchestrate_inline for planning.
+---
+# Paradigm Orchestration Protocol
+
+## Terminal Syntax (macOS)
+
+This project runs on **macOS**. Use appropriate syntax:
+
+| Operation | Unix Syntax |
+|-----------|-------------|
+| Chain commands | `cmd1 && cmd2` (stop on error) or `cmd1 ; cmd2` (always continue) |
+| Path separator | `/` (forward slash) |
+| Environment vars | `$VAR` or `${VAR}` |
+| Null device | `/dev/null` |
+| List files | `ls` |
+| Remove files | `rm` |
+
+**IMPORTANT:** Do NOT use Windows-style commands like `dir`, `del`, or `%VAR%`.
+
+## CRITICAL: When to Use Orchestration
+
+**ALWAYS call `paradigm_orchestrate_inline` FIRST when:**
+- Task affects 3+ files
+- Task involves security/auth AND implementation
+- Task mentions multiple features (#symbols)
+- Building a new feature end-to-end
+- User explicitly requests multi-agent workflow
+
+## Workflow
+
+1. **Plan first:** `paradigm_orchestrate_inline({ task: "...", mode: "plan" })`
+   - Review suggested agents and estimated tokens
+   - Check if parallel execution is possible
+
+2. **Execute:** `paradigm_orchestrate_inline({ task: "...", mode: "execute" })`
+   - Get full prompts and execution strategy
+   - Note which stages can run in parallel
+
+3. **Follow the plan sequentially:**
+   - For each stage/agent, adopt that role's prompt and focus areas
+   - Stage 0 (architect): Design and spec only — do NOT write implementation code
+   - Stage 1 (builder): Implement following the architect's design
+   - Stage 2 (tester/reviewer): Verify and test the implementation
+   - Pass context between phases as if handing off to a teammate
+
+4. **For true parallel execution**, suggest user runs:
+   `paradigm team orchestrate "task description"`
+
+5. **Record history:** `paradigm_history_record({ type: "implement", symbols: [...], description: "..." })`
+
+## Available Agents
+
+- **architect** (opus): You design system architecture, write specifications, and plan features. (writes: specs/*.md, .purpose)
+- **builder** (haiku): You implement code based on specifications from the Architect. (writes: src/**, tests/**)
+- **reviewer** (sonnet): You review code for correctness, security, and adherence to specs. (writes: reviews/*.md)
+- **tester** (haiku): You verify implementations work correctly. (writes: tests/**, health.yaml)
+- **security** (opus): You audit for security issues, especially around ^gates. (writes: security/*.md)
+
+## Red Flags - STOP and Orchestrate
+
+If you find yourself:
+- Implementing 5+ files without planning → STOP, call orchestrate
+- Adding auth without security review → STOP, involve security agent
+- Writing code without specs → STOP, involve architect first
+- Making cross-cutting changes → STOP, plan the stages
+
+## DO NOT Skip Orchestration
+
+Complex tasks need specialist agents. One agent trying to do everything leads to:
+- Missed security gates
+- Inconsistent patterns
+- Poor test coverage
+- Context overflow
+
+## CLI Shortcut
+
+You can also suggest agents via CLI:
+```bash
+paradigm team agents suggest "Add user authentication with JWT"
+```

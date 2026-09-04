@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": ".cursor/hooks/paradigm-session-start.sh",
+        "timeout": 5
+      }
+    ],
+    "stop": [
+      {
+        "command": ".cursor/hooks/paradigm-stop.sh",
+        "timeout": 10,
+        "loop_limit": 3
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": ".cursor/hooks/paradigm-postwrite.sh",
+        "timeout": 5
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": ".cursor/hooks/paradigm-pretooluse.sh",
+        "matcher": "Edit|Write",
+        "timeout": 5
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": ".cursor/hooks/paradigm-posttooluse.sh",
+        "matcher": "Edit|Write",
+        "timeout": 5
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/paradigm-precommit.sh",
+        "matcher": "git commit",
+        "timeout": 30
+      }
+    ]
+  }
+}

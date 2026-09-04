@@ -1,0 +1,199 @@
+version: 1.0.0
+team:
+  name: agentic-commerce-team
+  default_agent: architect
+  require_handoff: false
+agents:
+  architect:
+    name: architect
+    role: |-
+      You design system architecture, write specifications, and plan features.
+      You do NOT write implementation code - that's the Builder's job.
+      When your spec is ready, hand off to Builder with 'paradigm team handoff --to builder'.
+      Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+    focus:
+      reads:
+        - "@features"
+        - $flows
+        - specs/*.md
+        - health.yaml
+      writes:
+        - specs/*.md
+        - .purpose
+    triggers:
+      - type: keyword
+        match:
+          - design
+          - architect
+          - plan
+          - spec
+      - type: symbol
+        match:
+          - "@*"
+          - $*
+    handoff_to:
+      - builder
+      - reviewer
+    defaultModel: opus
+    context:
+      include:
+        - specs/*.md
+        - .purpose
+        - "**/.purpose"
+        - portal.yaml
+      exclude:
+        - src/**
+        - tests/**
+        - node_modules/**
+  builder:
+    name: builder
+    role: |-
+      You implement code based on specifications from the Architect.
+      Follow the spec exactly. If spec is unclear, hand back to Architect.
+      When implementation is ready, hand off to Reviewer with 'paradigm team handoff --to reviewer'.
+      Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+    focus:
+      reads:
+        - "#components"
+        - specs/*.md
+        - src/**
+        - tests/**
+      writes:
+        - src/**
+        - tests/**
+    triggers:
+      - type: keyword
+        match:
+          - implement
+          - build
+          - code
+          - fix
+      - type: handoff
+        from: architect
+    handoff_to:
+      - reviewer
+      - architect
+    defaultModel: haiku
+    context:
+      include:
+        - src/**
+        - tests/**
+        - "{feature}.purpose"
+      exclude:
+        - specs/*.md
+        - node_modules/**
+  reviewer:
+    name: reviewer
+    role: |-
+      You review code for correctness, security, and adherence to specs.
+      Check all ^gate requirements are met.
+      Approve or request changes. Do NOT implement fixes yourself.
+      Hand back to Builder for fixes, or to Tester when approved.
+      Repo rule: before approving or a PR is opened, confirm prompts.jsonl has an entry for every
+      prompt used on this branch (`npm run log-prompt -- "<prompt>"`). Block approval if missing. See CLAUDE.md.
+    focus:
+      reads:
+        - ^gates
+        - "!signals"
+        - portal.yaml
+        - src/**
+        - specs/*.md
+      writes:
+        - reviews/*.md
+    triggers:
+      - type: keyword
+        match:
+          - review
+          - check
+          - audit
+          - approve
+      - type: handoff
+        from: builder
+    handoff_to:
+      - builder
+      - tester
+    defaultModel: sonnet
+    context:
+      include:
+        - src/**
+        - specs/*.md
+        - portal.yaml
+        - .purpose
+        - CLAUDE.md
+        - prompts.jsonl
+      exclude:
+        - tests/**
+        - node_modules/**
+  tester:
+    name: tester
+    role: |-
+      You verify implementations work correctly.
+      Run tests, check portal validations, verify health status.
+      Report issues back to Builder. Update health.yaml when verified.
+      Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+    focus:
+      reads:
+        - tests/**
+        - portal.yaml
+        - health.yaml
+        - "#components"
+      writes:
+        - tests/**
+        - health.yaml
+    triggers:
+      - type: keyword
+        match:
+          - test
+          - verify
+          - qa
+          - validate
+      - type: handoff
+        from: reviewer
+    handoff_to:
+      - builder
+      - architect
+    defaultModel: haiku
+    context:
+      include:
+        - tests/**
+        - health.yaml
+        - "{feature}.purpose"
+      exclude:
+        - src/**
+        - specs/**
+        - node_modules/**
+  security:
+    name: security
+    role: |-
+      You audit for security issues, especially around ^gates.
+      Review auth flows, check for vulnerabilities.
+      Flag issues but do NOT implement fixes - hand to Builder for that.
+      Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+    focus:
+      reads:
+        - ^gates
+        - "!signals"
+        - portal.yaml
+        - src/**
+      writes:
+        - security/*.md
+    triggers:
+      - type: keyword
+        match:
+          - security
+          - audit
+          - vulnerability
+          - auth
+    handoff_to:
+      - builder
+      - architect
+    defaultModel: opus
+    context:
+      include:
+        - portal.yaml
+        - src/middleware/**
+        - src/auth/**
+      exclude:
+        - src/routes/**
+        - tests/**
+        - node_modules/**

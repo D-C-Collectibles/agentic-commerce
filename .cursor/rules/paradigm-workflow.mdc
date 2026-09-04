@@ -1,0 +1,76 @@
+---
+description: Paradigm workflow protocol - MUST follow for every task. Session bookends, task-size compliance, essential MCP tools.
+alwaysApply: true
+---
+# Paradigm Workflow Protocol
+
+**This file defines the non-negotiable workflow for every task. Follow it.**
+
+## Session Bookends (MUST Do)
+
+### Session Start
+```
+paradigm_session_recover()
+```
+Call this FIRST in every session. Returns previous context, modified symbols, and suggestions.
+
+### Session End
+```
+paradigm_pm_postflight({ summary: "what you did" })
+```
+Call this LAST before finishing. Catches missing .purpose files, missing gates, and compliance gaps.
+
+## Task-Size Compliance Guide
+
+Not every task needs the full ceremony. Match your effort to the scope:
+
+### Single-file bug fix (1 file changed)
+1. Session bookends (start + end)
+2. That's it — fix the bug, run postflight
+
+### Multi-file fix (2-3 files changed)
+1. Session bookends
+2. `paradigm_ripple({ symbol: "#affected-symbol" })` before changing
+3. Update nearest `.purpose` file if behavior changed
+4. Postflight
+
+### Feature build (3+ files, new behavior)
+1. Session bookends
+2. `paradigm_pm_preflight({ task: "description" })` — get compliance plan
+3. `paradigm_ripple` for each symbol you'll modify
+4. Implement the feature
+5. Create/update `.purpose` files for new directories
+6. Update `portal.yaml` if adding protected routes
+7. `paradigm_pm_postflight` — verify compliance
+8. `paradigm_lore_record` — record what you learned
+
+## The One Non-Negotiable Rule
+
+**You MUST update the nearest `.purpose` file when you change behavior.**
+
+- Adding a feature? Create a `.purpose` in the feature directory.
+- Modifying a component? Update its `.purpose` description, gates, or signals.
+- Deleting code? Remove the symbol from `.purpose`.
+- Not sure? Run `paradigm_pm_postflight` — it will tell you what's missing.
+
+## Essential MCP Tools (Use These, NOT CLI Commands)
+
+| Tool | When | Cost |
+|------|------|------|
+| `paradigm_session_recover` | Session start | ~100 tokens |
+| `paradigm_ripple` | Before modifying any symbol | ~300 tokens |
+| `paradigm_navigate` | Finding code locations | ~200 tokens |
+| `paradigm_pm_preflight` | Before starting a feature (3+ files) | ~200 tokens |
+| `paradigm_pm_postflight` | After finishing any task | ~200 tokens |
+| `paradigm_reindex` | After creating/modifying .purpose files | ~100 tokens |
+| `paradigm_gates_for_route` | Before adding API endpoints | ~150 tokens |
+| `paradigm_lore_record` | After completing a feature (record learnings) | ~100 tokens |
+
+## Red Flags — STOP and Check
+
+If you find yourself doing any of these, STOP:
+
+- **Modifying 3+ files without calling `paradigm_ripple`** → Check impact first
+- **Adding routes without checking `paradigm_gates_for_route`** → Get gate suggestions
+- **Finishing without running `paradigm_pm_postflight`** → You'll miss compliance gaps
+- **Creating directories without a `.purpose` file** → Every directory needs context

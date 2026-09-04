@@ -1,0 +1,39 @@
+---
+description: Paradigm core rules - project overview and fundamentals
+alwaysApply: true
+---
+# Paradigm - agentic-commerce
+
+> **Author:** Matt Canoy ([@ascend42](https://github.com/ascend42)) | **Repo:** [github.com/ascend42/a-paradigm](https://github.com/ascend42/a-paradigm) | **npm:** [@a-company/paradigm](https://www.npmjs.com/package/@a-company/paradigm)
+
+## CRITICAL RULES (Non-Negotiable)
+
+1. **You MUST update the nearest `.purpose` file when you change behavior.** No exceptions.
+2. **You MUST call `paradigm_session_recover` at session start and `paradigm_pm_postflight` when finishing.** See `paradigm-workflow.mdc` for the full protocol.
+3. **You MUST call `paradigm_ripple` before modifying any documented symbol.** Check impact before changing code.
+
+Violating these rules means your changes are non-compliant. The `paradigm-workflow.mdc` file contains the complete workflow — follow it.
+
+## Overview
+
+This project uses Paradigm for structured AI-assisted development.
+All context, symbols, and specifications live in the .paradigm/ directory.
+
+
+## How to Use Paradigm
+
+- Check .paradigm/specs/ for philosophy and patterns before making changes
+- Reference symbols using prefixes: #component ^gate !signal $flow ~aspect
+- Use the Paradigm logger instead of raw console.log/print statements
+- Run `paradigm probe` with screenshots to map UI to code
+- Check .paradigm/docs/ for command reference and troubleshooting
+- Read .index.yaml files first when navigating documentation
+- Use `paradigm team handoff` when approaching context limits
+
+
+## When to Update Paradigm Files
+
+- When adding a feature, create/update the nearest .purpose file
+- When adding authorization, update portal.yaml
+- When exploring ideas, use [idea] tag on any symbol
+- Always update references when renaming symbols

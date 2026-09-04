@@ -1,0 +1,19 @@
+---
+applyTo: "**/*.ts,**/*.tsx,**/*.js,**/*.jsx"
+---
+# Paradigm Symbol System
+
+## Symbol System
+
+Use these prefixes to reference project elements:
+
+| Symbol | Name | Description |
+|--------|------|-------------|
+| `#` | Component | Any documented code unit (feature, service, module, integration) |
+| `$` | Flow | Multi-step processes or user journeys |
+| `^` | Gate | Access control points and authorization rules |
+| `!` | Signal | Events emitted for side effects |
+| `~` | Aspect | Cross-cutting rules with required code anchors |
+
+See `.paradigm/specs/symbols.md` for complete reference.
+

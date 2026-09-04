@@ -1,0 +1,6 @@
+version: 1.0.0
+description: Project purpose and context
+context:
+  - Add contextual notes for AI agents here
+features: {}
+components: {}

@@ -1,0 +1,35 @@
+---
+description: Paradigm commit conventions with Symbols: trailer - apply when creating git commits for history tracking.
+---
+## Commit Messages
+
+Use v2 symbols in commits for history tracking:
+
+### Format
+```
+type(#primary-symbol): short description
+
+- Detail with #component references
+- Gate changes: ^gate-name
+- Signals emitted: !signal-name
+
+Symbols: #symbol-a, #symbol-b, !signal-c
+```
+
+### Convention
+- **Subject**: `type(#symbol): description` — primary symbol in parens
+- **Body**: Reference affected symbols with prefixes (# $ ^ ! ~)
+- **Trailer**: `Symbols: #a, #b, !c` — machine-readable list of ALL affected symbols
+- The `Symbols:` trailer is parsed by the post-commit hook for automatic history capture
+
+### Examples
+```
+feat(#payment-form): add Apple Pay support
+
+- Add #apple-pay-button component
+- Update $checkout-flow with new payment step
+- Emit !payment-method-added signal
+- Gate: ^authenticated required
+
+Symbols: #payment-form, #apple-pay-button, $checkout-flow, !payment-method-added
+```

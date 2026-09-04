@@ -1,0 +1,71 @@
+---
+description: Paradigm MCP tool queries for AI agents - use MCP tools instead of reading large files or running CLI commands
+alwaysApply: true
+---
+# Agent MCP Queries (Token-Efficient)
+
+**Use MCP tool calls, NOT CLI commands.** MCP tools return structured data directly — no shell overhead, no parsing, no latency.
+
+## When to Query
+
+| Before doing this... | Call this MCP tool |
+|---------------------|-------------------|
+| Modifying a symbol | `paradigm_ripple({ symbol: "#symbol" })` |
+| Debugging / searching | `paradigm_search({ query: "ERROR_CODE" })` |
+| Starting a session | `paradigm_session_recover()` |
+| Understanding relationships | `paradigm_navigate({ intent: "find", target: "#symbol" })` |
+| Getting oriented | `paradigm_status()` |
+| Checking impact on flows | `paradigm_flows_affected({ symbol: "#symbol" })` |
+| Adding API endpoints | `paradigm_gates_for_route({ method: "POST", path: "/api/resource" })` |
+
+## Query Patterns
+
+### Before Changing Code
+
+```
+// See what depends on what you're changing
+paradigm_ripple({ symbol: "#checkout" })
+
+// Returns: upstream deps, downstream effects, flow membership
+```
+
+### When Debugging
+
+```
+// Search for error context
+paradigm_search({ query: "AUTH_REQUIRED" })
+
+// Then check ripple effects of the related symbol
+paradigm_ripple({ symbol: "^authenticated" })
+```
+
+### Starting Work
+
+```
+// Load previous session context (MUST do this at session start)
+paradigm_session_recover()
+
+// Quick project orientation
+paradigm_status()
+```
+
+### Finding Code Locations
+
+```
+// Find a specific symbol
+paradigm_navigate({ intent: "find", target: "#checkout" })
+
+// Explore an area of code
+paradigm_navigate({ intent: "explore", target: "authentication" })
+
+// Get context for a task
+paradigm_navigate({ intent: "context", task: "add Apple Pay" })
+```
+
+## Why MCP Over CLI
+
+- **No shell overhead**: Direct structured responses, no `--json` flags or `jq` parsing
+- **Fresh data**: Always current, not stale from file generation
+- **Precise**: Only get the data you need
+- **Token-efficient**: ~100-300 tokens per query vs ~2000 for file reads
+- **No latency**: No process spawn — MCP tools respond directly

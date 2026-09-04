@@ -1,0 +1,22 @@
+{
+  "$meta": {
+    "version": "1.0.0",
+    "project": "agentic-commerce",
+    "generatedAt": "2026-09-04T17:43:57.486Z",
+    "paradigmVersion": "0.1.0",
+    "sources": {
+      "purposeFiles": 1,
+      "portalFiles": 1,
+      "premiseFiles": 0
+    }
+  },
+  "components": {},
+  "features": {},
+  "flows": {},
+  "state": {},
+  "gates": {},
+  "signals": {},
+  "aspects": {},
+  "screens": {},
+  "symbolMap": {}
+}

@@ -1,0 +1,53 @@
+---
+description: Portal (gate) configuration rules
+globs: **/portal.yaml
+alwaysApply: false
+---
+# Portal Configuration
+
+Portal files (`portal.yaml`) define authorization topology.
+
+## Format
+
+```yaml
+version: "1.0"
+
+gates:
+  gate-name:
+    description: What this gate protects
+    locks:
+      - id: lock-id
+        description: Requirement description
+        keys:
+          - expression: "user.authenticated"
+            description: User must be logged in
+    prizes:
+      - id: prize-id
+        oneTime: true
+        metadata:
+          event: "gate_passed"
+
+flows:
+  flow-name:
+    description: User journey
+    gates: [gate1, gate2, gate3]
+```
+
+## Portal Validation
+
+Use the Portal Validator for authorization checks:
+
+```typescript
+import { portal } from '@a-company/portal-sdk/validator';
+
+const gate = portal.check('^gate-name')
+  .requires('requirement description')
+  .context({ userId, role });
+
+if (!condition) {
+  gate.deny('Reason for denial');
+  return redirect('/unauthorized');
+}
+
+gate.allow('Access granted');
+```

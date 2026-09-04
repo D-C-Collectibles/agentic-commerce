@@ -1,0 +1,167 @@
+# agentic-commerce - Paradigm Context
+
+Generated for Windsurf by Paradigm.
+
+## Overview
+
+This project uses Paradigm for structured AI-assisted development.
+All context, symbols, and specifications live in the .paradigm/ directory.
+
+
+## How to Use Paradigm
+
+- Check .paradigm/specs/ for philosophy and patterns before making changes
+- Reference symbols using prefixes: #component ^gate !signal $flow ~aspect
+- Use the Paradigm logger instead of raw console.log/print statements
+- Run `paradigm probe` with screenshots to map UI to code
+- Check .paradigm/docs/ for command reference and troubleshooting
+- Read .index.yaml files first when navigating documentation
+- Use `paradigm team handoff` when approaching context limits
+
+## Symbol System
+
+Use these prefixes to reference project elements:
+
+| Symbol | Name | Description |
+|--------|------|-------------|
+| `#` | Component | Any documented code unit (feature, service, module, integration) |
+| `$` | Flow | Multi-step processes or user journeys |
+| `^` | Gate | Access control points and authorization rules |
+| `!` | Signal | Events emitted for side effects |
+| `~` | Aspect | Cross-cutting rules with required code anchors |
+
+See `.paradigm/specs/symbols.md` for complete reference.
+
+## Paradigm Logging
+
+**IMPORTANT:** Use the Paradigm logger instead of raw console.log/print.
+
+```
+// Use this pattern:
+log.component('#login-handler').info('Starting login', { email });
+log.component('#database').debug('Query executed', { duration });
+log.gate('^authenticated').warn('Access denied', { userId });
+log.signal('!login-success').info('User authenticated');
+```
+
+### Symbol Mapping by Directory
+
+| Directory | Symbol | Logger Method |
+|-----------|--------|---------------|
+| `services/**` | `#` | `log.component()` |
+| `routes/**` | `#` | `log.component()` |
+| `api/**` | `#` | `log.component()` |
+| `models/**` | `#` | `log.component()` |
+| `lib/**` | `#` | `log.component()` |
+| `utils/**` | `#` | `log.component()` |
+| `core/**` | `#` | `log.component()` |
+| `config/**` | `#` | `log.component()` |
+| `middleware/**` | `^` | `log.gate()` |
+| `auth/**` | `^` | `log.gate()` |
+| `guards/**` | `^` | `log.gate()` |
+| `policies/**` | `^` | `log.gate()` |
+| `events/**` | `!` | `log.signal()` |
+| `handlers/**` | `!` | `log.signal()` |
+| `listeners/**` | `!` | `log.signal()` |
+| `flows/**` | `$` | `log.flow()` |
+| `workflows/**` | `$` | `log.flow()` |
+| `pipelines/**` | `$` | `log.flow()` |
+| `aspects/**` | `~` | `log.aspect()` |
+| `rules/**` | `~` | `log.aspect()` |
+
+See `.paradigm/specs/logger.md` for full specification.
+
+## Paradigm Probe
+
+When the user says "**paradigm probe**" with an image:
+
+1. Analyze the image for UI elements
+2. Cross-reference with `.paradigm/probe-index.json`
+3. Return structured mapping of visual elements to code
+
+| Mode | Use Case |
+|------|----------|
+| `paradigm probe` | Map any image to code |
+| `paradigm probe ui` | Screenshot of running app |
+| `paradigm probe design` | Mockup - gap analysis |
+| `paradigm probe error` | Error screenshot |
+
+See `.paradigm/specs/probe.md` for full protocol.
+
+## When to Update Paradigm Files
+
+- When adding a feature, create/update the nearest .purpose file
+- When adding authorization, update portal.yaml
+- When exploring ideas, use [idea] tag on any symbol
+- Always update references when renaming symbols
+
+## Conventions
+
+- Use kebab-case for all symbol IDs (feature-name, not featureName)
+- Document flows when logic spans 3+ components
+- Reference related items using symbol prefixes (# $ ^ ! ~)
+- Add descriptions to all components and gates
+- Update .purpose files when changing feature behavior
+- Keep gates minimal - one responsibility per gate
+- Use signals for side effects, not direct state mutations
+- ALWAYS use Paradigm logger, NEVER raw console.log/print
+
+## Commit Messages
+
+Use v2 symbols in commits for history tracking:
+
+### Format
+```
+type(#primary-symbol): short description
+
+- Detail with #component references
+- Gate changes: ^gate-name
+- Signals emitted: !signal-name
+
+Symbols: #symbol-a, #symbol-b, !signal-c
+```
+
+### Convention
+- **Subject**: `type(#symbol): description` — primary symbol in parens
+- **Body**: Reference affected symbols with prefixes (# $ ^ ! ~)
+- **Trailer**: `Symbols: #a, #b, !c` — machine-readable list of ALL affected symbols
+- The `Symbols:` trailer is parsed by the post-commit hook for automatic history capture
+
+### Examples
+```
+feat(#payment-form): add Apple Pay support
+
+- Add #apple-pay-button component
+- Update $checkout-flow with new payment step
+- Emit !payment-method-added signal
+- Gate: ^authenticated required
+
+Symbols: #payment-form, #apple-pay-button, $checkout-flow, !payment-method-added
+```
+
+## Paradigm Commands
+
+| Command | Description |
+|---------|-------------|
+| `paradigm init` | Initialize Paradigm in a project |
+| `paradigm sync` | Regenerate IDE instruction files |
+| `paradigm index` | Generate scan index |
+| `paradigm doctor` | Health check |
+| `paradigm status` | Show project status |
+| `paradigm watch` | Auto-sync on changes |
+
+See `.paradigm/docs/commands.md` for full reference.
+
+---
+
+## Reference Files
+
+- `.paradigm/specs/symbols.md` - Symbol system reference
+- `.paradigm/specs/logger.md` - Logging specification
+- `.paradigm/specs/probe.md` - Probe protocol
+- `.paradigm/docs/commands.md` - CLI reference
+- `.paradigm/docs/patterns.md` - Coding patterns
+- `.paradigm/docs/troubleshooting.md` - Common issues
+- `.paradigm/prompts/` - Pre-written task prompts
+
+*Generated by Paradigm. Run `paradigm sync` to regenerate.*

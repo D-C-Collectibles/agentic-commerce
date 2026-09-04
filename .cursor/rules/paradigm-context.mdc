@@ -1,0 +1,85 @@
+---
+description: Session recovery and handoff - call paradigm_session_recover at session start, paradigm_session_health periodically during long sessions, paradigm_handoff_prepare when context is high.
+---
+# Context Monitoring Protocol
+
+## Session Start (EVERY new session)
+
+Call `paradigm_session_recover` to load previous session breadcrumbs.
+Returns: symbols modified, files explored, recent actions, and suggestions.
+
+## Periodic Checks
+
+**Every 10-15 tool calls** (or when user asks about context), call:
+
+```
+paradigm_session_health()
+```
+
+This returns a recommendation: `continue`, `consider-handoff`, `handoff-recommended`, or `handoff-urgent`.
+
+## When to Handoff
+
+| Usage | Recommendation | Action |
+|-------|----------------|--------|
+| <50% | continue | Keep working |
+| 50-70% | consider-handoff | Plan handoff; prepare summary when ready |
+| 70-85% | handoff-recommended | Prepare handoff soon |
+| >85% | handoff-urgent | Handoff after current task |
+
+## When Recommendation is NOT "continue"
+
+1. **Inform user**: "Context usage is at ~X%. Recommend handoff soon."
+2. **Offer to prepare**: Ask if user wants handoff summary
+3. **If urgent (>85%)**: Prioritize completing current task, then handoff
+
+## Handoff Process
+
+1. Call `paradigm_handoff_prepare` with:
+   - Summary of work completed
+   - List of next steps
+   - Target agent role
+
+2. User runs CLI command:
+   ```bash
+   paradigm team handoff --to <agent> --summary "..."
+   ```
+
+3. New session accepts:
+   ```bash
+   paradigm team accept <handoff-id>
+   ```
+
+## Session Stats
+
+Get current stats anytime:
+```
+paradigm_session_stats()
+```
+
+## Session Checkpoints
+
+**Auto-recovery**: Recovery data is automatically surfaced on your first Paradigm tool call — no action needed to receive it.
+
+Save checkpoints when transitioning between workflow phases to enable crash recovery:
+
+| Phase | Trigger | What to Capture |
+|-------|---------|-----------------|
+| `planning` | After reading requirements / before coding | Plan, approach, key decisions |
+| `implementing` | After starting code changes | Modified files, symbols touched, decisions made |
+| `validating` | After implementation, before tests/review | All modified files, test plan |
+| `complete` | Task finished | Summary, final file list |
+
+### Usage
+
+```
+paradigm_session_checkpoint({
+  phase: "implementing",
+  context: "Adding JWT auth middleware to /api/projects routes",
+  modifiedFiles: ["src/middleware/auth.ts", "src/routes/projects.ts"],
+  symbolsTouched: ["^authenticated", "#project-routes"],
+  decisions: ["Using RS256 for JWT signing", "Storing refresh tokens in httpOnly cookies"]
+})
+```
+
+Keep it lightweight: `phase` + `context` are required, everything else is optional.

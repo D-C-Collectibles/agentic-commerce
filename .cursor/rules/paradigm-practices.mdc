@@ -1,0 +1,64 @@
+---
+description: Paradigm practices - habits, lore recording, and llms.txt. Apply when finishing tasks, recording history, or checking compliance.
+alwaysApply: false
+---
+# Paradigm Practices
+
+## Habits Compliance
+
+Paradigm tracks behavioral habits — repeatable practices that improve code quality.
+
+### When to Check Habits
+
+| Trigger | When | Tool |
+|---------|------|------|
+| `preflight` | Before starting implementation | `paradigm_habits_check({ trigger: "preflight" })` |
+| `postflight` | After completing implementation | `paradigm_habits_check({ trigger: "postflight" })` |
+| `on-stop` | Before ending a session | `paradigm_habits_check({ trigger: "on-stop" })` |
+
+### Key Habit Categories
+
+| Category | Examples |
+|----------|----------|
+| Discovery | Call `paradigm_ripple` before modifying symbols |
+| Security | Declare gates for new routes in portal.yaml |
+| Documentation | Update .purpose files for modified components |
+| Quality | Record lore for sessions modifying 3+ files |
+
+Use `paradigm_practice_context` before modifying symbols to get habit-aware warnings.
+
+
+## Lore Recording
+
+Lore captures the project timeline — sessions, decisions, milestones, and incidents.
+
+### When to Record Lore
+
+| Type | When | Example |
+|------|------|---------|
+| `agent-session` | After modifying 3+ files | "Added JWT auth to /api/projects" |
+| `decision` | After making architectural choices | "Chose Redis over Memcached for caching" |
+| `milestone` | After completing a significant feature | "v2.0 migration complete" |
+| `incident` | After resolving a production issue | "Fixed OOM in payment worker" |
+
+### Recording
+
+```
+paradigm_lore_record({
+  type: "agent-session",
+  title: "Short description of work done",
+  summary: "Detailed summary of changes...",
+  symbols_touched: ["#component", "^gate"]
+})
+```
+
+Use `paradigm_lore_timeline` at session start for project history orientation.
+
+
+## llms.txt
+
+This project provides an `llms.txt` file at the repository root — a plain-text summary
+of the project optimized for LLM consumption. It includes symbols, key files, flows,
+gates, and conventions.
+
+Regenerate with: `paradigm sync-llms`

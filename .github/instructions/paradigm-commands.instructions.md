@@ -1,0 +1,15 @@
+# Paradigm CLI Commands
+
+## Paradigm Commands
+
+| Command | Description |
+|---------|-------------|
+| `paradigm init` | Initialize Paradigm in a project |
+| `paradigm sync` | Regenerate IDE instruction files |
+| `paradigm index` | Generate scan index |
+| `paradigm doctor` | Health check |
+| `paradigm status` | Show project status |
+| `paradigm watch` | Auto-sync on changes |
+
+See `.paradigm/docs/commands.md` for full reference.
+

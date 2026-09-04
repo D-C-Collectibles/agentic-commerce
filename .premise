@@ -1,0 +1,17 @@
+version: 1.0.0
+metadata:
+  name: agentic-commerce
+  created: '2026-09-04T17:39:55.748Z'
+  modified: '2026-09-04T17:39:55.749Z'
+sources:
+  purpose:
+    - path: ./
+  portal:
+    - path: ./portal.yaml
+nodes: []
+connections: []
+layout:
+  viewport:
+    x: 0
+    'y': 0
+    zoom: 1

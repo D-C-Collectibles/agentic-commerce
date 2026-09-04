@@ -1,0 +1,113 @@
+---
+description: Flow-first development - apply when implementing features spanning multiple steps, requiring gates, or emitting signals. Define $flows before coding.
+---
+# Flow-First Development
+
+## What are Flows?
+
+Flows ($symbols) are composable sequences of gates, actions, and signals that represent the "happy path" for a feature.
+
+```yaml
+# .paradigm/flows.yaml
+flows:
+  $task-creation:
+    name: Task Creation Flow
+    description: Complete flow for creating a new task
+    trigger: "POST /api/tasks"
+    steps:
+      - type: gate
+        symbol: ^authenticated
+        description: User must be logged in
+      - type: gate
+        symbol: ^project-member
+        description: User must be member of target project
+      - type: action
+        symbol: "#validate-task-input"
+        description: Validate task data
+      - type: action
+        symbol: "#create-task"
+        description: Create task in database
+      - type: signal
+        symbol: "!task-created"
+        description: Emit success event
+    successSignal: "!task-created"
+    failureSignal: "!task-creation-failed"
+```
+
+## When to Define Flows
+
+**BEFORE implementing features that:**
+- Span multiple steps or components
+- Require authorization gates
+- Emit signals/events
+- Integrate with external systems
+
+## Flow-First Protocol
+
+1. **Define the flow first** in `.paradigm/flows.yaml`:
+   - What gates must pass?
+   - What actions occur in what order?
+   - What signals are emitted?
+
+2. **Validate before implementing:**
+   ```
+   paradigm_flow_check({ flowId: "$task-creation" })
+   ```
+   - Ensures all gates are declared in portal.yaml
+   - Checks for missing symbols
+
+3. **Implement following the flow:**
+   - Each step becomes a clear implementation target
+   - Gates → middleware/authorization checks
+   - Actions → business logic functions
+   - Signals → event emitters/hooks
+
+## Flow Validation
+
+Call `paradigm_flow_check` to check flows:
+
+```
+// Validate specific flow
+paradigm_flow_check({ flowId: "$task-creation" })
+
+// Validate all flows
+paradigm_flow_check({ checkImplementation: true })
+```
+
+**What gets checked:**
+- All ^gates are declared in portal.yaml
+- All #actions reference existing components
+- All !signals are documented
+
+## Benefits
+
+1. **Clear implementation targets** - Each flow step is a discrete unit
+2. **Gate coverage** - All authorization points are explicit
+3. **Testability** - Flows can be tested step-by-step
+4. **Documentation** - The flow IS the documentation
+5. **Parallel work** - Different team members can implement different steps
+
+## Red Flags
+
+**STOP and define a flow if:**
+- You're implementing a "happy path" without documenting it
+- You're adding gates without knowing the full sequence
+- You're emitting signals without knowing what listens
+- You're modifying existing flows without checking validation
+
+## MCP Tools
+
+| Tool | Purpose |
+|------|---------|
+| `paradigm_flow_check` | Validate flow definitions |
+| `paradigm_flows_affected` | Check which flows are impacted by symbol changes |
+
+## CLI Commands
+
+```bash
+# Validate all flows
+paradigm flow validate --all
+
+# Validate specific flow
+paradigm flow validate $task-creation
+```

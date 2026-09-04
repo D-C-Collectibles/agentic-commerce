@@ -1,0 +1,16 @@
+---
+applyTo: "**/*.ts,**/*.tsx,**/*.js,**/*.jsx"
+---
+# Paradigm Conventions
+
+## Conventions
+
+- Use kebab-case for all symbol IDs (feature-name, not featureName)
+- Document flows when logic spans 3+ components
+- Reference related items using symbol prefixes (# $ ^ ! ~)
+- Add descriptions to all components and gates
+- Update .purpose files when changing feature behavior
+- Keep gates minimal - one responsibility per gate
+- Use signals for side effects, not direct state mutations
+- ALWAYS use Paradigm logger, NEVER raw console.log/print
+

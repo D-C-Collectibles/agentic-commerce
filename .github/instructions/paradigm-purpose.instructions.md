@@ -1,0 +1,30 @@
+---
+applyTo: "**/.purpose"
+---
+# Purpose Files
+
+Purpose files (`.purpose`) define the context for directories.
+
+## Format
+
+```yaml
+# Directory context
+description: What this directory contains and why
+
+# Components (# symbol) — all documented code units
+components:
+  component-name:
+    description: What this component does
+    tags: [feature]                # Classification via tag bank
+    gates: [^gate1, ^gate2]       # Required gates
+    signals: [!signal1]           # Events emitted
+    used-by: [#other-component]
+```
+
+## Symbol References (v2)
+
+- Reference components: `#component-name`
+- Reference flows: `$flow-name`
+- Reference gates: `^gate-name`
+- Reference signals: `!signal-name`
+- Reference aspects: `~aspect-name`

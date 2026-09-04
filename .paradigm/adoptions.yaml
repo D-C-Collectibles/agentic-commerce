@@ -1,0 +1,45 @@
+version: "1.0"
+adopted-at: "2026-09-04T17:39:55.766Z"
+project-type: generic
+integrity-hash: 3ac9633998656f8777de81bd1de86e94922d5c3e78d493ef2ce8d223e92b8dac
+agents:
+  advocate:
+    adopted: "2026-09-04T17:39:55.766Z"
+    source: core
+    defaults-accepted: true
+  architect:
+    adopted: "2026-09-04T17:39:55.766Z"
+    source: core
+    defaults-accepted: true
+  builder:
+    adopted: "2026-09-04T17:39:55.766Z"
+    source: core
+    defaults-accepted: true
+  compliance:
+    adopted: "2026-09-04T17:39:55.766Z"
+    source: core
+    defaults-accepted: true
+  debugger:
+    adopted: "2026-09-04T17:39:55.766Z"
+    source: core
+    defaults-accepted: true
+  documentor:
+    adopted: "2026-09-04T17:39:55.766Z"
+    source: core
+    defaults-accepted: true
+  qa:
+    adopted: "2026-09-04T17:39:55.766Z"
+    source: core
+    defaults-accepted: true
+  reviewer:
+    adopted: "2026-09-04T17:39:55.766Z"
+    source: core
+    defaults-accepted: true
+  security:
+    adopted: "2026-09-04T17:39:55.766Z"
+    source: core
+    defaults-accepted: true
+  tester:
+    adopted: "2026-09-04T17:39:55.766Z"
+    source: core
+    defaults-accepted: true

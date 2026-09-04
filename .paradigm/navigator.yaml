@@ -1,0 +1,51 @@
+version: '1.0'
+generated: '2026-09-04T17:43:57.487Z'
+structure: {}
+key_files:
+  config:
+    - .paradigm/config.yaml
+    - package.json
+  entry: []
+  types: []
+skip_patterns:
+  always:
+    - node_modules/
+    - dist/
+    - build/
+    - .git/
+    - .next/
+    - .nuxt/
+    - .cache/
+    - '*.lock'
+    - '*.log'
+    - npm-debug.log*
+    - yarn-debug.log*
+    - yarn-error.log*
+    - lerna-debug.log*
+    - report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+    - '*.pid'
+    - '*.seed'
+    - '*.pid.lock'
+    - '*.lcov'
+    - build/Release
+    - jspm_packages/
+    - web_modules/
+    - '*.tsbuildinfo'
+    - '*.tgz'
+    - .env.*
+    - .cache
+    - dist
+  unless_testing:
+    - '**/*.test.ts'
+    - '**/*.test.tsx'
+    - '**/*.spec.ts'
+    - '**/*.spec.tsx'
+    - __tests__/
+    - test/
+    - tests/
+  unless_docs:
+    - docs/
+    - '*.md'
+    - README*
+    - CHANGELOG*
+symbols: {}
