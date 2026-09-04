@@ -1,0 +1,12 @@
+id: builder
+project: agentic-commerce
+lastSession:
+  date: '2026-09-04T20:49:44.521Z'
+  sessionId: orch-mtnfgidk-69av
+  summary: '[builder]: builder: Implement: Implement checkout-gates: authenticatio...'
+  symbolsTouched:
+    - '#checkout-route'
+    - ^authenticated
+pendingWork: []
+recentPatterns: []
+sessionsOnProject: 1

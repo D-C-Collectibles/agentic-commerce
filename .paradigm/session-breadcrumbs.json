@@ -1,0 +1,21 @@
+{
+  "sessionId": "smtng47a3",
+  "startTime": 1788556089819,
+  "lastActivity": 1788556186420,
+  "breadcrumbs": [
+    {
+      "timestamp": 1788556186274,
+      "action": "tool-call",
+      "tool": "paradigm_lore_record",
+      "summary": "lore_record: Implement wallet checkout: spend caps, Circle wallet service"
+    },
+    {
+      "timestamp": 1788561535953,
+      "action": "tool-call",
+      "tool": "paradigm_status",
+      "summary": "Checked project status"
+    }
+  ],
+  "symbolsModified": [],
+  "filesExplored": []
+}

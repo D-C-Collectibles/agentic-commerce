@@ -1,0 +1,6 @@
+{
+  "timestamp": "2026-09-04T20:49:44.503Z",
+  "taskDescription": "Implement checkout-gates: authentication and authorization gates for the agent-initiated wallet checkout route (#checkout-route, ^authenticated)",
+  "depth": "standard",
+  "coverageScore": 0.5
+}

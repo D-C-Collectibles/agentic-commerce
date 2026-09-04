@@ -1,0 +1,58 @@
+id: orch-mtnfgidk-69av
+task: >-
+  Implement checkout-gates: authentication and authorization gates for the
+  agent-initiated wallet checkout route (#checkout-route, ^authenticated)
+created: '2026-09-04T20:49:44.504Z'
+status: pending
+mode: faceted
+symbols:
+  - '#checkout-route'
+  - ^authenticated
+estimatedAgents: 4
+estimatedTokens:
+  min: 17000
+  max: 83000
+stages:
+  - stage: 0
+    agents:
+      - name: security
+        task: >-
+          Review security aspects of: Implement checkout-gates: authentication
+          and authorization gates for the agent-initiated wallet checkout route
+          (#checkout-route, ^authenticated)
+        dependsOn: []
+        required: false
+    canRunParallel: false
+  - stage: 1
+    agents:
+      - name: builder
+        task: >-
+          Implement: Implement checkout-gates: authentication and authorization
+          gates for the agent-initiated wallet checkout route (#checkout-route,
+          ^authenticated)
+        dependsOn:
+          - security
+        required: true
+      - name: reviewer
+        task: >-
+          Review: Implement checkout-gates: authentication and authorization
+          gates for the agent-initiated wallet checkout route (#checkout-route,
+          ^authenticated)
+        dependsOn:
+          - builder
+        required: false
+    canRunParallel: true
+  - stage: 2
+    agents:
+      - name: documentor
+        task: >-
+          Review all changes made by previous agents. Update .purpose files,
+          portal.yaml, and symbol registrations using only paradigm_purpose_*
+          and paradigm_portal_* MCP tools. Run paradigm_reindex when done. Do
+          NOT modify source code.
+        dependsOn:
+          - security
+          - builder
+          - reviewer
+        required: true
+    canRunParallel: false
