@@ -26,7 +26,9 @@ Every prompt a developer sends to an AI assistant in this repo must be logged to
 at the repo root (JSON Lines: `{timestamp, author, prompt}`). Author is taken automatically from
 `git config user.name`/`user.email`.
 
-Log a prompt with:
+This happens automatically in Claude Code via a `UserPromptSubmit` hook
+(`.claude/hooks/log-prompt.sh`, registered in `.claude/settings.json`) — no manual step needed
+for Claude Code sessions started after this hook was installed. For other tools/manual logging:
 
 ```
 npm run log-prompt -- "the prompt text"

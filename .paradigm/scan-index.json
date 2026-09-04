@@ -2,7 +2,7 @@
   "$meta": {
     "version": "1.0.0",
     "project": "agentic-commerce",
-    "generatedAt": "2026-09-04T17:43:57.486Z",
+    "generatedAt": "2026-09-04T17:47:13.140Z",
     "paradigmVersion": "0.1.0",
     "sources": {
       "purposeFiles": 1,
@@ -10,7 +10,18 @@
       "premiseFiles": 0
     }
   },
-  "components": {},
+  "components": {
+    "prompt-logging-hook": {
+      "id": "prompt-logging-hook",
+      "name": "Prompt Logging Hook",
+      "symbol": "#prompt-logging-hook",
+      "category": "components",
+      "path": "/Users/dchan/src/agentic-commerce/.purpose",
+      "description": "UserPromptSubmit hook that auto-logs every developer prompt to prompts.jsonl (author, timestamp, prompt text) for hackathon tracking. Registered in .claude/settings.json; delegates to scripts/log-prompt.mjs.",
+      "visualTags": [],
+      "related": []
+    }
+  },
   "features": {},
   "flows": {},
   "state": {},
@@ -18,5 +29,10 @@
   "signals": {},
   "aspects": {},
   "screens": {},
-  "symbolMap": {}
+  "symbolMap": {
+    "#prompt-logging-hook": {
+      "category": "components",
+      "id": "prompt-logging-hook"
+    }
+  }
 }

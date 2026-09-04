@@ -3,4 +3,10 @@ description: Project purpose and context
 context:
   - Add contextual notes for AI agents here
 features: {}
-components: {}
+components:
+  prompt-logging-hook:
+    description: >-
+      UserPromptSubmit hook that auto-logs every developer prompt to
+      prompts.jsonl (author, timestamp, prompt text) for hackathon tracking.
+      Registered in .claude/settings.json; delegates to scripts/log-prompt.mjs.
+    tags: [hackathon, logging, hook]
