@@ -1,0 +1,19 @@
+id: T-2026-09-04-009
+blurb: 'Implement: Review this diff (do NOT edit files) against .paradigm/specs/wallet-checkout.md: the #wallet-service implementation in server/src/services/wallet.ts wiring @circle-fin/developer-controlled-wallets (one EOA wallet per user on ARC-TESTNET, wallet set + user wallet ids persisted in a lazily-created Postgres table, USDC token address resolved dynamically via getWalletTokenBalance with a documented fallback constant, createTransaction called with an idempotencyKey). Diff is at /tmp/wallet-diff.patch. Reviewer: check idempotency handling, error handling on missing wallet, whether persisting Circle wallet ids in a plain user_wallets table is an acceptable custody boundary given the entity secret stays server-side, and whether the fallback USDC token address is a risk. Security: check for any secret leakage, replay risk, and whether unauthenticated callers could trigger getOrCreateUserWallet/transferUsdc (note: ^authenticated/^checkout-authorized gates are not wired into the route yet, still TODO).'
+priority: medium
+status: done
+tags:
+  - orchestration
+created: '2026-09-04T20:26:32.732Z'
+claimant:
+  kind: archetype
+  ref: builder
+parentTaskId: T-2026-09-04-006
+dependsOn:
+  - T-2026-09-04-007
+stage: 1
+external_ref:
+  provider: orchestration
+  ref: orch-2026-09-04-c6bf2p
+started_at: '2026-09-04T20:26:32.795Z'
+completed: '2026-09-04T20:26:32.803Z'

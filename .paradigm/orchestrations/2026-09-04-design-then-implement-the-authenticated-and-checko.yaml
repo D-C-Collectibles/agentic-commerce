@@ -1,0 +1,14 @@
+id: orch-2026-09-04-7blcd9
+task: "Design then implement the ^authenticated and ^checkout-authorized gates for POST /checkout (server/src/routes/checkout.ts) and ^webhook-signature-verified for POST /webhooks/circle (server/src/routes/webhooks.ts), per .paradigm/specs/wallet-checkout.md and portal.yaml. No existing auth/session system exists in this repo yet (hackathon scale) — architect must pick a minimal, documented mechanism (e.g. a bearer user-id token) rather than a full auth system. checkout.ts must: authenticate the caller, recompute price server-side (no client-trusted amounts), enforce per-user per-tx/daily USDC caps app-side, require an explicit !checkout-confirmed signal for amounts above an auto-approve threshold, then call transferUsdc() from #wallet-service. webhooks.ts must verify X-Circle-Signature/X-Circle-Key-Id before trusting payload and update order state idempotently by Circle transaction id. Do not implement Circle wallet SDK internals (already done in wallet.ts) — only the gate/route logic."
+mode: faceted
+started: "2026-09-04T20:40:45.017Z"
+status: success
+agents: []
+totals:
+  duration_ms: 56
+  tokens: 0
+  cost_usd: 0
+  agents_spawned: 1
+  files_created: 0
+  files_modified: 0
+completed: "2026-09-04T20:40:45.017Z"

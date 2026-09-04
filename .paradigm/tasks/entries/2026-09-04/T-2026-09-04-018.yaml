@@ -1,0 +1,19 @@
+id: T-2026-09-04-018
+blurb: Review all changes made by previous agents. Update .purpose files, portal.yaml, and symbol registrations using only paradigm_purpose_* and paradigm_portal_* MCP tools. Run paradigm_reindex when done. Do NOT modify source code.
+priority: medium
+status: open
+tags:
+  - orchestration
+created: '2026-09-04T20:49:44.517Z'
+claimant:
+  kind: archetype
+  ref: documentor
+parentTaskId: T-2026-09-04-014
+dependsOn:
+  - T-2026-09-04-015
+  - T-2026-09-04-016
+  - T-2026-09-04-017
+stage: 2
+external_ref:
+  provider: orchestration
+  ref: orch-mtnfgidk-69av

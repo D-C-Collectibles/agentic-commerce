@@ -1,0 +1,34 @@
+id: L-2026-09-04-dchan0319-210946-001
+type: agent-session
+timestamp: '2026-09-04T21:09:46.321Z'
+author: dchan0319
+agent:
+  provider: anthropic
+  model: claude-opus-4-6
+title: 'Implement wallet checkout: spend caps, Circle wallet service, webhook verification'
+summary: 'Implemented the agent-initiated wallet checkout flow scaffolded earlier: #checkout-route now enforces ^authenticated (hackathon bearer-as-userid stand-in) and ^checkout-authorized (per-tx cap, daily cap, explicit confirmation above auto-approve threshold) before calling #wallet-service. #wallet-service wires up @circle-fin/developer-controlled-wallets for per-user EOA wallets on Arc testnet and USDC transfers. #circle-webhook-route now verifies Circle''s notification signature (^webhook-signature-verified) and idempotently updates order status on !payment-confirmed / !payment-failed.'
+symbols_touched:
+  - '#checkout-route'
+  - '#wallet-service'
+  - '#circle-webhook-route'
+  - ^authenticated
+  - ^checkout-authorized
+  - ^webhook-signature-verified
+  - '!payment-submitted'
+  - '!payment-confirmed'
+  - '!payment-failed'
+  - $checkout-flow
+files_modified:
+  - server/src/index.ts
+  - server/src/routes/checkout.ts
+  - server/src/routes/webhooks.ts
+  - server/src/services/wallet.ts
+  - server/src/routes/.purpose
+tags:
+  - wallet-checkout
+  - circle
+  - hackathon
+git_context:
+  ref: 70d92b98327ccc101bc80342bd28513caebd3bca
+  branch: feat/wallet-checkout-scaffold
+  dirty: true

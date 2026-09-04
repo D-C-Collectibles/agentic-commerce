@@ -1,0 +1,12 @@
+id: reviewer
+project: agentic-commerce
+lastSession:
+  date: '2026-09-04T20:49:44.522Z'
+  sessionId: orch-mtnfgidk-69av
+  summary: '[reviewer]: reviewer: Review: Implement checkout-gates: authentication a...'
+  symbolsTouched:
+    - '#checkout-route'
+    - ^authenticated
+pendingWork: []
+recentPatterns: []
+sessionsOnProject: 1

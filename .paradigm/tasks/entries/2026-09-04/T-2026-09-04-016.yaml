@@ -1,0 +1,17 @@
+id: T-2026-09-04-016
+blurb: 'Implement: Implement checkout-gates: authentication and authorization gates for the agent-initiated wallet checkout route (#checkout-route, ^authenticated)'
+priority: medium
+status: open
+tags:
+  - orchestration
+created: '2026-09-04T20:49:44.515Z'
+claimant:
+  kind: archetype
+  ref: builder
+parentTaskId: T-2026-09-04-014
+dependsOn:
+  - T-2026-09-04-015
+stage: 1
+external_ref:
+  provider: orchestration
+  ref: orch-mtnfgidk-69av
