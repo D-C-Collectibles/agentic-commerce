@@ -71,5 +71,8 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "circle-skills@circle": true
   }
 }

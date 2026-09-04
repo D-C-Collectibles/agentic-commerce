@@ -1,0 +1,2 @@
+Claude Code lifecycle hooks: prompt logging (log-prompt.sh) and Paradigm
+compliance enforcement (paradigm-*.sh, shared checks in paradigm-common.sh).

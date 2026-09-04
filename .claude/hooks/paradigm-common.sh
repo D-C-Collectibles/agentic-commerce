@@ -117,7 +117,7 @@ for file in $MODIFIED; do
     .paradigm/*|*.purpose|portal.yaml)
       PARADIGM_COUNT=$((PARADIGM_COUNT + 1))
       ;;
-    *.md|*.lock|*.log|.gitignore|.env*|*.json) ;;
+    *.md|*.lock|*.log|*.jsonl|.gitignore|.env*|*.json) ;;
     *)
       SOURCE_COUNT=$((SOURCE_COUNT + 1))
       # Check if this file's directory has a covering .purpose that was modified
@@ -184,7 +184,7 @@ DIRS_WITHOUT_PURPOSE=""
 
 for file in $MODIFIED; do
   case "$file" in
-    .paradigm/*|*.md|*.lock|*.log|.gitignore|.env*|*.json|*.purpose|portal.yaml) continue ;;
+    .paradigm/*|*.md|*.lock|*.log|*.jsonl|.gitignore|.env*|*.json|*.purpose|portal.yaml) continue ;;
   esac
 
   dir=$(dirname "$file")
@@ -377,7 +377,7 @@ fi
 # This catches cases where .pending-review is missing or out of sync.
 for file in $MODIFIED; do
   case "$file" in
-    .paradigm/*|*.md|*.lock|*.log|.gitignore|.env*|*.json|*.purpose|portal.yaml) continue ;;
+    .paradigm/*|*.md|*.lock|*.log|*.jsonl|.gitignore|.env*|*.json|*.purpose|portal.yaml) continue ;;
   esac
   [ -f "$file" ] || continue
 
@@ -503,7 +503,7 @@ if [ "$_SEV" != "off" ] && [ "$SOURCE_COUNT" -ge 3 ] && [ -d ".paradigm/lore" ];
       LORE_SYMBOLS=""
       for file in $MODIFIED; do
         case "$file" in
-          .paradigm/*|*.md|*.lock|*.log|.gitignore|.env*|*.json|*.purpose|portal.yaml) continue ;;
+          .paradigm/*|*.md|*.lock|*.log|*.jsonl|.gitignore|.env*|*.json|*.purpose|portal.yaml) continue ;;
         esac
         sym_dir=$(basename "$(dirname "$file")")
         case "$LORE_SYMBOLS" in
