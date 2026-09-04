@@ -1,5 +1,5 @@
 version: '1.0'
-generated: '2026-09-04T19:51:31.391Z'
+generated: '2026-09-04T21:36:25.357Z'
 structure: {}
 key_files:
   config:
@@ -33,6 +33,7 @@ skip_patterns:
     - '*.tsbuildinfo'
     - '*.tgz'
     - .env.*
+    - server/recovery/
     - .cache
     - dist
   unless_testing:

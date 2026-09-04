@@ -1,2 +1,9 @@
-version: "1.0"
+version: '1.0'
+generated: '2026-09-04T20:59:28.549Z'
 personas: {}
+chains: {}
+gate_coverage: {}
+route_coverage: {}
+uncovered_routes:
+  - POST /checkout
+  - POST /webhooks/circle
