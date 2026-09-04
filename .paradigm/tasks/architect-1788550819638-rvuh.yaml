@@ -1,0 +1,133 @@
+id: architect-1788550819638-rvuh
+agent: architect
+model: opus
+status: pending
+created: '2026-09-04T19:40:19.639Z'
+task: >-
+  Design and specify: Design (plan/spec only, do NOT write or edit any files) a
+  wallet-abstraction architecture so that Claude Code agent sessions can perform
+  e-commerce checkouts on behalf of users, using Circle Developer-Controlled
+  Wallets (server-custodied, entity-secret based) for custody/signing and Arc
+  (or other EVM chain via Circle) for USDC settlement. Constraints: current repo
+  is a minimal Express+TS server (server/src/index.ts, db.ts) backed by Neon
+  Postgres, no auth/wallet code yet exists. Must follow this repo's Paradigm
+  conventions (#component/^gate/!signal/ symbols, portal.yaml gates for
+  protected routes, .purpose files). Must propose: (1) wallet custody model &
+  where entity secret lives, (2) spending-policy/guardrails so an LLM agent
+  can't overspend (per-tx/daily caps, human confirmation for checkout), (3)
+  checkout flow as a  spanning components (cart/order -> price check -> policy
+  check -> Circle wallet transfer -> order confirmation), (4) which portal.yaml
+  gates protect the checkout route, (5) webhook handling for async transaction
+  settlement, (6) testnet-first rollout plan. Reviewer agent should flag
+  security risks (agent-authorized fund movement, key custody,
+  replay/idempotency).
+
+
+  ## Context from previous agents:
+
+  ## Auto-Ripple Analysis
+
+
+  The following symbols are affected by this refactoring:
+
+
+  - **#component**: Check dependencies before renaming/moving
+
+  - **^gate**: Check dependencies before renaming/moving
+
+  - **!signal**: Check dependencies before renaming/moving
+
+
+  **Recommendation:** Run `paradigm_ripple` for each symbol before making
+  changes.
+context:
+  systemPrompt: >
+    # Architect Agent Context
+
+
+    > Project: agentic-commerce
+
+    > Discipline: backend
+
+
+    ## Project Overview
+
+
+    This project uses Paradigm for structured AI-assisted development.
+
+    All context, symbols, and specifications live in the .paradigm/ directory.
+
+
+
+    ## Symbol System
+
+
+    | Symbol | Meaning | Description |
+
+    |--------|---------|-------------|
+
+    | `#` | Component | Any documented code unit (feature, service, module,
+    integration) |
+
+    | `$` | Flow | Multi-step processes or user journeys |
+
+    | `^` | Gate | Access control points and authorization rules |
+
+    | `!` | Signal | Events emitted for side effects |
+
+    | `~` | Aspect | Cross-cutting rules with required code anchors |
+
+
+    ## Conventions
+
+
+    - Use kebab-case for all symbol IDs (feature-name, not featureName)
+
+    - Document flows when logic spans 3+ components
+
+    - Reference related items using symbol prefixes (# $ ^ ! ~)
+
+
+    ## Symbols in Scope
+
+
+    - `#component` (component)
+
+    - `^gate` (gate)
+
+    - `!signal` (signal)
+
+
+    ## Tips for This Role
+
+
+    - Focus on design decisions, not implementation details
+
+    - Use paradigm symbols to reference features and components
+
+    - Document flows that span 3+ components
+
+    - Hand off to builder when spec is ready
+  symbols:
+    - '#component'
+    - ^gate
+    - '!signal'
+role: >-
+  You design system architecture, write specifications, and plan features.
+
+  You do NOT write implementation code - that's the Builder's job.
+
+  When your spec is ready, hand off to Builder with 'paradigm team handoff --to
+  builder'.
+
+  Repo rule: every prompt used for this work must be logged via `npm run
+  log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+focus:
+  reads:
+    - '@features'
+    - $flows
+    - specs/*.md
+    - health.yaml
+  writes:
+    - specs/*.md
+    - .purpose

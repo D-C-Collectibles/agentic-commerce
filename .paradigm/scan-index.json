@@ -2,10 +2,10 @@
   "$meta": {
     "version": "1.0.0",
     "project": "agentic-commerce",
-    "generatedAt": "2026-09-04T19:29:47.310Z",
+    "generatedAt": "2026-09-04T19:51:31.389Z",
     "paradigmVersion": "0.1.0",
     "sources": {
-      "purposeFiles": 1,
+      "purposeFiles": 2,
       "portalFiles": 1,
       "premiseFiles": 0
     }
@@ -25,7 +25,39 @@
   "features": {},
   "flows": {},
   "state": {},
-  "gates": {},
+  "gates": {
+    "authenticated": {
+      "id": "authenticated",
+      "name": "Authenticated",
+      "symbol": "^authenticated",
+      "category": "gates",
+      "path": "/Users/dchan/src/agentic-commerce",
+      "description": "Valid signed-in user session required.",
+      "related": []
+    },
+    "checkout-authorized": {
+      "id": "checkout-authorized",
+      "name": "Checkout Authorized",
+      "symbol": "^checkout-authorized",
+      "category": "gates",
+      "path": "/Users/dchan/src/agentic-commerce",
+      "description": "Per-user spending-policy check (per-tx/daily USDC caps) plus an explicit !checkout-confirmed signal from the user for amounts above the auto-approve threshold. Runs after ^authenticated, before any wallet transfer is submitted.\n",
+      "related": [
+        "^authenticated"
+      ]
+    },
+    "webhook-signature-verified": {
+      "id": "webhook-signature-verified",
+      "name": "Webhook Signature Verified",
+      "symbol": "^webhook-signature-verified",
+      "category": "gates",
+      "path": "/Users/dchan/src/agentic-commerce",
+      "description": "Verifies Circle's X-Circle-Signature / X-Circle-Key-Id headers. Used instead of ^authenticated on webhook routes, which have no user session.\n",
+      "related": [
+        "^authenticated"
+      ]
+    }
+  },
   "signals": {},
   "aspects": {},
   "screens": {},
@@ -33,6 +65,18 @@
     "#prompt-logging-hook": {
       "category": "components",
       "id": "prompt-logging-hook"
+    },
+    "^authenticated": {
+      "category": "gates",
+      "id": "authenticated"
+    },
+    "^checkout-authorized": {
+      "category": "gates",
+      "id": "checkout-authorized"
+    },
+    "^webhook-signature-verified": {
+      "category": "gates",
+      "id": "webhook-signature-verified"
     }
   }
 }

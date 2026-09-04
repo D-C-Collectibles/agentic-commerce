@@ -1,0 +1,16 @@
+checkout:
+  symbol: "#checkout-route"
+  description: >
+    HTTP entry point for $checkout-flow. Recomputes price server-side, enforces
+    ^checkout-authorized, and hands off to #wallet-service for the actual transfer.
+  gates: [^authenticated, ^checkout-authorized]
+  signals: [!payment-submitted]
+
+circle-webhook:
+  symbol: "#circle-webhook-route"
+  description: >
+    Receives Circle transaction-state webhooks. Source of truth for terminal
+    payment state (COMPLETE/FAILED/DENIED/CANCELLED); updates orders idempotently
+    by Circle transaction id.
+  gates: [^webhook-signature-verified]
+  signals: [!payment-confirmed, !payment-failed]

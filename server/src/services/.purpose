@@ -1,0 +1,6 @@
+wallet:
+  symbol: "#wallet-service"
+  description: >
+    Wraps the Circle Developer-Controlled Wallets SDK. One wallet per user,
+    server-custodied. Entity secret read from env only, never exposed to callers.
+    All mutating calls use a UUID v4 idempotencyKey.
