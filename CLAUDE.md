@@ -26,6 +26,18 @@ This repo uses **pnpm**, not npm — `pnpm install`, `pnpm run <script>` (or `pn
 `server/`). It connects to the Neon Postgres project `agentic-commerce` via `DATABASE_URL` (see
 `server/.env.example`).
 
+Public endpoints: `GET /products` (#products-route) and `POST /auth/signup` + `POST /auth/login`
+(#auth-route). Auth is email + bcrypt password → a signed JWT (`JWT_SECRET` env, `sub` = user id)
+that satisfies `^authenticated` on `/checkout`. The Circle client inits lazily, so the server boots
+to serve products/auth even without `CIRCLE_API_KEY` (only checkout needs it).
+
+## Frontend
+
+`client/` is a React + Vite + TypeScript SPA — the storefront (#storefront): product grid plus
+email/password account creation and JWT-gated checkout. `pnpm install && pnpm dev` inside `client/`
+(Vite on :5173). It calls the API at `VITE_API_URL` (default `http://localhost:3000`, see
+`client/.env.example`); the JWT is kept in `localStorage` and sent as `Authorization: Bearer`.
+
 ## Hackathon prompt logging
 
 Every prompt a developer sends to an AI assistant in this repo must be logged. **Each contributor

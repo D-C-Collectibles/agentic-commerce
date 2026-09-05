@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import { pool } from "../db.js";
+import { verifyToken } from "../services/auth.js";
 import { getOrCreateUserWallet, transferUsdc } from "../services/wallet.js";
 
 export const checkoutRouter = Router();
@@ -37,13 +38,14 @@ async function ensureSchema(): Promise<void> {
   `);
 }
 
-// HACKATHON STAND-IN — see .paradigm/specs/wallet-checkout.md (^authenticated).
-// The bearer value IS the user id: unsigned, no expiry, no lookup table. Proves
-// nothing about who's holding the token. A real implementation needs a login
-// flow, signed/opaque session tokens, a users table, and expiry/revocation.
+// ^authenticated — the bearer token is now a signed JWT issued by #auth-service.
+// verifyToken checks the signature + expiry and returns the user id (the `sub`
+// claim), or null for a missing/invalid/expired token. Backed by the `users`
+// table (email + bcrypt password_hash); this replaces the earlier Bearer=userId
+// stand-in. Still tech-demo grade — see #auth-service for what's intentionally omitted.
 function requireUserId(authHeader: string | undefined): string | null {
-  const userId = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length).trim() : "";
-  return userId || null;
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length).trim() : "";
+  return verifyToken(token || undefined);
 }
 
 checkoutRouter.post("/checkout", async (req, res) => {

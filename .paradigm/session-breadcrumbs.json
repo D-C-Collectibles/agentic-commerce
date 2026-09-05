@@ -1,19 +1,31 @@
 {
-  "sessionId": "smtng47a3",
-  "startTime": 1788556089819,
-  "lastActivity": 1788556186420,
+  "sessionId": "smtnru8kr",
+  "startTime": 1788575780331,
+  "lastActivity": 1788576944616,
   "breadcrumbs": [
     {
-      "timestamp": 1788556186274,
+      "timestamp": 1788575874735,
       "action": "tool-call",
-      "tool": "paradigm_lore_record",
-      "summary": "lore_record: Implement wallet checkout: spend caps, Circle wallet service"
+      "tool": "paradigm_session_recover",
+      "summary": "session_recover"
     },
     {
-      "timestamp": 1788561535953,
+      "timestamp": 1788576401783,
       "action": "tool-call",
-      "tool": "paradigm_status",
-      "summary": "Checked project status"
+      "tool": "paradigm_lore_record",
+      "summary": "lore_record: Storefront + email/password auth — assessment & scope"
+    },
+    {
+      "timestamp": 1788576944501,
+      "action": "tool-call",
+      "tool": "paradigm_reindex",
+      "summary": "Rebuilt static index files"
+    },
+    {
+      "timestamp": 1788576998088,
+      "action": "tool-call",
+      "tool": "paradigm_lore_record",
+      "summary": "lore_record: Built storefront SPA + email/password JWT auth"
     }
   ],
   "symbolsModified": [],

@@ -1,3 +1,20 @@
+auth:
+  symbol: "#auth-route"
+  description: >
+    Public account endpoints backing the storefront. POST /auth/signup creates a
+    user (409 email_taken on conflict), POST /auth/login verifies credentials; both
+    return { token, user } where token is a signed JWT from #auth-service. Login
+    returns a generic 401 invalid_credentials without revealing which field failed.
+    No gate — these are the entry points that mint the ^authenticated token.
+  signals: [!user-registered, !user-logged-in]
+
+products:
+  symbol: "#products-route"
+  description: >
+    Public catalog read (GET /products) for the storefront. No auth — browsing is
+    anonymous; ^authenticated only applies at /checkout. Prices returned as strings
+    (Postgres numeric) so the client never does float math on money.
+
 checkout:
   symbol: "#checkout-route"
   description: >

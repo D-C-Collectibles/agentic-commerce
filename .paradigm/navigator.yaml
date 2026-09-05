@@ -1,5 +1,5 @@
 version: '1.0'
-generated: '2026-09-05T02:24:39.236Z'
+generated: '2026-09-05T02:55:44.575Z'
 structure: {}
 key_files:
   config:
@@ -49,4 +49,8 @@ skip_patterns:
     - '*.md'
     - README*
     - CHANGELOG*
-symbols: {}
+symbols:
+  '#purpose-component-prompt-logging-hook': C:\Users\ascen\Documents\GitHub\agentic-commerce\.purpose
+  ^gate-authenticated: C:\Users\ascen\Documents\GitHub\agentic-commerce
+  ^gate-checkout-authorized: C:\Users\ascen\Documents\GitHub\agentic-commerce
+  ^gate-webhook-signature-verified: C:\Users\ascen\Documents\GitHub\agentic-commerce

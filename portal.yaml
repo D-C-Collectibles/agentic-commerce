@@ -1,7 +1,11 @@
 version: "2.0"
 gates:
   ^authenticated:
-    description: Valid signed-in user session required.
+    description: >
+      Valid signed-in user session required. Enforced by verifying a signed JWT
+      (Authorization: Bearer <token>) issued by #auth-service on signup/login; the
+      `sub` claim is the user id. Backed by the `users` table (email + bcrypt
+      password_hash). Replaces the earlier Bearer=userId hackathon stand-in.
   ^checkout-authorized:
     description: >
       Per-user spending-policy check (per-tx/daily USDC caps) plus an explicit
@@ -12,6 +16,12 @@ gates:
       Verifies Circle's X-Circle-Signature / X-Circle-Key-Id headers. Used instead of
       ^authenticated on webhook routes, which have no user session.
 routes:
+  GET /products:
+    gates: []  # public catalog read (#products-route)
+  POST /auth/signup:
+    gates: []  # public — mints the ^authenticated token (#auth-route)
+  POST /auth/login:
+    gates: []  # public — mints the ^authenticated token (#auth-route)
   POST /checkout:
     gates: [^authenticated, ^checkout-authorized]
   POST /webhooks/circle:

@@ -1,9 +1,12 @@
 version: '1.0'
-generated: '2026-09-04T20:59:28.549Z'
+generated: '2026-09-05T02:55:44.618Z'
 personas: {}
 chains: {}
 gate_coverage: {}
 route_coverage: {}
 uncovered_routes:
+  - GET /products
+  - POST /auth/signup
+  - POST /auth/login
   - POST /checkout
   - POST /webhooks/circle

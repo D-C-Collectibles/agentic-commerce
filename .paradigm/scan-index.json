@@ -2,10 +2,10 @@
   "$meta": {
     "version": "1.0.0",
     "project": "agentic-commerce",
-    "generatedAt": "2026-09-05T02:24:39.234Z",
+    "generatedAt": "2026-09-05T02:55:44.574Z",
     "paradigmVersion": "0.1.0",
     "sources": {
-      "purposeFiles": 2,
+      "purposeFiles": 1,
       "portalFiles": 1,
       "premiseFiles": 0
     }
@@ -16,7 +16,7 @@
       "name": "Prompt Logging Hook",
       "symbol": "#prompt-logging-hook",
       "category": "components",
-      "path": "/Users/ascend/Documents/GitHub/agentic-commerce/.purpose",
+      "path": "C:\\Users\\ascen\\Documents\\GitHub\\agentic-commerce\\.purpose",
       "description": "UserPromptSubmit hook that auto-logs every developer prompt to prompts.jsonl (author, timestamp, prompt text) for hackathon tracking. Registered in .claude/settings.json; delegates to scripts/log-prompt.mjs.",
       "visualTags": [],
       "related": []
@@ -31,8 +31,8 @@
       "name": "Authenticated",
       "symbol": "^authenticated",
       "category": "gates",
-      "path": "/Users/ascend/Documents/GitHub/agentic-commerce",
-      "description": "Valid signed-in user session required.",
+      "path": "C:\\Users\\ascen\\Documents\\GitHub\\agentic-commerce",
+      "description": "Valid signed-in user session required. Enforced by verifying a signed JWT (Authorization: Bearer <token>) issued by #auth-service on signup/login; the `sub` claim is the user id. Backed by the `users` table (email + bcrypt password_hash). Replaces the earlier Bearer=userId hackathon stand-in.\n",
       "related": []
     },
     "checkout-authorized": {
@@ -40,7 +40,7 @@
       "name": "Checkout Authorized",
       "symbol": "^checkout-authorized",
       "category": "gates",
-      "path": "/Users/ascend/Documents/GitHub/agentic-commerce",
+      "path": "C:\\Users\\ascen\\Documents\\GitHub\\agentic-commerce",
       "description": "Per-user spending-policy check (per-tx/daily USDC caps) plus an explicit !checkout-confirmed signal from the user for amounts above the auto-approve threshold. Runs after ^authenticated, before any wallet transfer is submitted.\n",
       "related": [
         "^authenticated"
@@ -51,7 +51,7 @@
       "name": "Webhook Signature Verified",
       "symbol": "^webhook-signature-verified",
       "category": "gates",
-      "path": "/Users/ascend/Documents/GitHub/agentic-commerce",
+      "path": "C:\\Users\\ascen\\Documents\\GitHub\\agentic-commerce",
       "description": "Verifies Circle's X-Circle-Signature / X-Circle-Key-Id headers. Used instead of ^authenticated on webhook routes, which have no user session.\n",
       "related": [
         "^authenticated"

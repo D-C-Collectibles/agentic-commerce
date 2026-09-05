@@ -4,3 +4,18 @@ wallet:
     Wraps the Circle Developer-Controlled Wallets SDK. One wallet per user,
     server-custodied. Entity secret read from env only, never exposed to callers.
     All mutating calls use a UUID v4 idempotencyKey.
+
+auth:
+  symbol: "#auth-service"
+  description: >
+    Email + password accounts for the storefront demo. Passwords are bcrypt-hashed
+    into the `users` table; createUser/authenticateUser issue a signed JWT whose
+    `sub` claim is the user id. verifyToken checks signature + expiry and backs the
+    ^authenticated gate (replacing the earlier Bearer=userId stand-in). JWT_SECRET is
+    read lazily from env so unauthenticated routes still boot without it.
+  gates: [^authenticated]
+  signals: [!user-registered, !user-logged-in]
+  new_tables: [users]
+  ponytail: >
+    Tech-demo grade. Intentionally omitted: email verification, password reset,
+    rate limiting, refresh/rotation, token revocation. Min password length 6.
