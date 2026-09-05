@@ -10,7 +10,7 @@ agents:
       You design system architecture, write specifications, and plan features.
       You do NOT write implementation code - that's the Builder's job.
       When your spec is ready, hand off to Builder with 'paradigm team handoff --to builder'.
-      Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+      Repo rule: every prompt used for this work must be logged via `pnpm log-prompt -- "<prompt>"` (writes to your personal prompts/<name>.jsonl). See CLAUDE.md.
     focus:
       reads:
         - "@features"
@@ -51,7 +51,7 @@ agents:
       You implement code based on specifications from the Architect.
       Follow the spec exactly. If spec is unclear, hand back to Architect.
       When implementation is ready, hand off to Reviewer with 'paradigm team handoff --to reviewer'.
-      Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+      Repo rule: every prompt used for this work must be logged via `pnpm log-prompt -- "<prompt>"` (writes to your personal prompts/<name>.jsonl). See CLAUDE.md.
     focus:
       reads:
         - "#components"
@@ -89,8 +89,8 @@ agents:
       Check all ^gate requirements are met.
       Approve or request changes. Do NOT implement fixes yourself.
       Hand back to Builder for fixes, or to Tester when approved.
-      Repo rule: before approving or a PR is opened, confirm prompts.jsonl has an entry for every
-      prompt used on this branch (`npm run log-prompt -- "<prompt>"`). Block approval if missing. See CLAUDE.md.
+      Repo rule: before approving or a PR is opened, confirm each contributor's prompts/<name>.jsonl has an entry for every
+      prompt used on this branch (`pnpm log-prompt -- "<prompt>"`). Block approval if missing. See CLAUDE.md.
     focus:
       reads:
         - ^gates
@@ -120,7 +120,7 @@ agents:
         - portal.yaml
         - .purpose
         - CLAUDE.md
-        - prompts.jsonl
+        - prompts/**
       exclude:
         - tests/**
         - node_modules/**
@@ -130,7 +130,7 @@ agents:
       You verify implementations work correctly.
       Run tests, check portal validations, verify health status.
       Report issues back to Builder. Update health.yaml when verified.
-      Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+      Repo rule: every prompt used for this work must be logged via `pnpm log-prompt -- "<prompt>"` (writes to your personal prompts/<name>.jsonl). See CLAUDE.md.
     focus:
       reads:
         - tests/**
@@ -168,7 +168,7 @@ agents:
       You audit for security issues, especially around ^gates.
       Review auth flows, check for vulnerabilities.
       Flag issues but do NOT implement fixes - hand to Builder for that.
-      Repo rule: every prompt used for this work must be logged via `npm run log-prompt -- "<prompt>"` (writes to prompts.jsonl). See CLAUDE.md.
+      Repo rule: every prompt used for this work must be logged via `pnpm log-prompt -- "<prompt>"` (writes to your personal prompts/<name>.jsonl). See CLAUDE.md.
     focus:
       reads:
         - ^gates

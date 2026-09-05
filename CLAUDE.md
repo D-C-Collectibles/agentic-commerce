@@ -28,21 +28,37 @@ This repo uses **pnpm**, not npm — `pnpm install`, `pnpm run <script>` (or `pn
 
 ## Hackathon prompt logging
 
-Every prompt a developer sends to an AI assistant in this repo must be logged to `prompts.jsonl`
-at the repo root (JSON Lines: `{timestamp, author, prompt}`). Author is taken automatically from
-`git config user.name`/`user.email`.
+Every prompt a developer sends to an AI assistant in this repo must be logged. **Each contributor
+writes to their OWN personal log** at `prompts/<name>.jsonl` (e.g. `prompts/matt.jsonl`,
+`prompts/darren.jsonl`) — never a shared file. Because each person only ever appends to their own
+file, two people logging in parallel can never produce a merge conflict. The `<name>` slug is
+derived automatically: known contributors map to a friendly first name (see `AUTHOR_SLUGS` in
+`scripts/log-prompt.mjs`), everyone else falls back to a slugified `git config user.name`.
 
-This happens automatically in Claude Code via a `UserPromptSubmit` hook
+The top-level `prompts.jsonl` is a **frozen historical archive** from before the split — nothing
+writes to it anymore; leave it as-is.
+
+Each entry is JSON Lines with a `type` field:
+
+- `{timestamp, author, type: "prompt", prompt}` — a developer prompt (the default).
+- `{timestamp, author, type: "merge", note}` — a merge / conflict-resolution note. **Whenever you
+  resolve a merge conflict, log what you did to your personal log.**
+
+Author is taken automatically from `git config user.name`/`user.email`.
+
+Prompt logging happens automatically in Claude Code via a `UserPromptSubmit` hook
 (`.claude/hooks/log-prompt.sh`, registered in `.claude/settings.json`) — no manual step needed
-for Claude Code sessions started after this hook was installed. For other tools/manual logging:
+for Claude Code sessions started after this hook was installed. For other tools, manual logging,
+or merge notes:
 
 ```
 pnpm log-prompt -- "the prompt text"
+pnpm log-prompt -- --type merge "resolved conflict in X, took theirs"
 ```
 
 **Rule: before opening a PR, confirm every prompt used for that branch's work has a matching
-entry in `prompts.jsonl`.** Treat this as a checklist item alongside tests/lint — do not open the
-PR until it's checked off.
+entry in your `prompts/<name>.jsonl`.** Treat this as a checklist item alongside tests/lint — do
+not open the PR until it's checked off.
 
 
 ## Quick Orientation
