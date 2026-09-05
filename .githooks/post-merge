@@ -1,0 +1,27 @@
+#!/bin/sh
+# post-merge — auto-note a merge to the current contributor's personal prompt log
+# (prompts/<name>.jsonl, type=merge). See CLAUDE.md › "Hackathon prompt logging".
+#
+# Fires after a SUCCESSFUL `git merge` / `git pull` (a clean auto-merge or a
+# fast-forward). Git does NOT run this hook when a merge stops on conflicts — in
+# that case the companion `post-commit` hook notes it when you commit the
+# resolution. Between them, both merge paths get logged exactly once.
+#
+# Arg $1 = 1 if this was a squash merge, else 0. This hook cannot affect the
+# merge outcome; it never fails the merge.
+
+repo=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+[ -f "$repo/scripts/log-prompt.mjs" ] || exit 0
+command -v node >/dev/null 2>&1 || exit 0
+
+if [ "$1" = "1" ]; then kind="squash-merge"; else kind="merge"; fi
+prev=$(git rev-parse --short ORIG_HEAD 2>/dev/null || echo "?")
+now=$(git rev-parse --short HEAD 2>/dev/null || echo "?")
+
+# Non-merge commits this merge brought in (cap to keep the note tidy).
+brought=$(git log --no-merges --format='%h %s' ORIG_HEAD..HEAD 2>/dev/null | head -10 | tr '\n' ';' | sed 's/;$//')
+[ -z "$brought" ] && brought="(no new commits — already up to date)"
+
+note="post-merge auto-note: clean $kind $prev -> $now. Brought in: $brought"
+node "$repo/scripts/log-prompt.mjs" --type merge "$note" >/dev/null 2>&1 || true
+exit 0

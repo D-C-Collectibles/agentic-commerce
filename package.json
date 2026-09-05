@@ -2,6 +2,7 @@
   "name": "agentic-commerce",
   "private": true,
   "scripts": {
-    "log-prompt": "node scripts/log-prompt.mjs"
+    "log-prompt": "node scripts/log-prompt.mjs",
+    "prepare": "git config core.hooksPath .githooks || true"
   }
 }
