@@ -6,7 +6,11 @@ features: {}
 components:
   prompt-logging-hook:
     description: >-
-      UserPromptSubmit hook that auto-logs every developer prompt to
-      prompts.jsonl (author, timestamp, prompt text) for hackathon tracking.
-      Registered in .claude/settings.json; delegates to scripts/log-prompt.mjs.
+      UserPromptSubmit hook that auto-logs every developer prompt to their own
+      prompts/<name>.jsonl (author, timestamp, prompt text) for hackathon
+      tracking. Registered in .claude/settings.json; delegates to
+      scripts/log-prompt.mjs. prompts.jsonl at the repo root is a frozen
+      historical archive from before the per-contributor split and no longer
+      receives new writes; a leftover unresolved merge conflict in it (from an
+      old `git stash pop`) was resolved in place on 2026-09-05.
     tags: [hackathon, logging, hook]
