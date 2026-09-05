@@ -2,7 +2,7 @@
   "$meta": {
     "version": "1.0.0",
     "project": "agentic-commerce",
-    "generatedAt": "2026-09-04T21:36:25.355Z",
+    "generatedAt": "2026-09-05T00:02:49.685Z",
     "paradigmVersion": "0.1.0",
     "sources": {
       "purposeFiles": 2,
@@ -16,7 +16,7 @@
       "name": "Prompt Logging Hook",
       "symbol": "#prompt-logging-hook",
       "category": "components",
-      "path": "/Users/dchan/src/agentic-commerce/.purpose",
+      "path": "/Users/ascend/Documents/GitHub/agentic-commerce/.purpose",
       "description": "UserPromptSubmit hook that auto-logs every developer prompt to prompts.jsonl (author, timestamp, prompt text) for hackathon tracking. Registered in .claude/settings.json; delegates to scripts/log-prompt.mjs.",
       "visualTags": [],
       "related": []
@@ -31,7 +31,7 @@
       "name": "Authenticated",
       "symbol": "^authenticated",
       "category": "gates",
-      "path": "/Users/dchan/src/agentic-commerce",
+      "path": "/Users/ascend/Documents/GitHub/agentic-commerce",
       "description": "Valid signed-in user session required.",
       "related": []
     },
@@ -40,7 +40,7 @@
       "name": "Checkout Authorized",
       "symbol": "^checkout-authorized",
       "category": "gates",
-      "path": "/Users/dchan/src/agentic-commerce",
+      "path": "/Users/ascend/Documents/GitHub/agentic-commerce",
       "description": "Per-user spending-policy check (per-tx/daily USDC caps) plus an explicit !checkout-confirmed signal from the user for amounts above the auto-approve threshold. Runs after ^authenticated, before any wallet transfer is submitted.\n",
       "related": [
         "^authenticated"
@@ -51,7 +51,7 @@
       "name": "Webhook Signature Verified",
       "symbol": "^webhook-signature-verified",
       "category": "gates",
-      "path": "/Users/dchan/src/agentic-commerce",
+      "path": "/Users/ascend/Documents/GitHub/agentic-commerce",
       "description": "Verifies Circle's X-Circle-Signature / X-Circle-Key-Id headers. Used instead of ^authenticated on webhook routes, which have no user session.\n",
       "related": [
         "^authenticated"
