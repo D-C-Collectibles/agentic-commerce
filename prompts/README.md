@@ -16,8 +16,10 @@ Each line is one entry, tagged with `type`:
 {"timestamp":"…","author":"Name <email>","type":"merge","note":"resolved conflict in X, took theirs"}
 ```
 
-Prompts are logged automatically in Claude Code (`UserPromptSubmit` hook). Log manually — or log a
-merge/conflict note — with:
+Prompts are logged automatically in Claude Code (`UserPromptSubmit` hook). **Merges** are logged
+automatically too, by the git hooks in `../.githooks/` (`post-merge` for clean merges,
+`post-commit` for conflict-resolved ones) — run `pnpm install` once per clone to activate them.
+Log manually — or enrich an auto-generated merge note — with:
 
 ```
 pnpm log-prompt -- "the prompt text"

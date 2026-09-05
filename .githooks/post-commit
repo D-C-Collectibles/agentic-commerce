@@ -1,0 +1,27 @@
+#!/bin/sh
+# post-commit — companion to post-merge. Auto-notes a CONFLICT-RESOLVED merge to
+# the current contributor's personal prompt log (prompts/<name>.jsonl, type=merge).
+#
+# Why this exists: git runs `post-merge` only for clean merges. When a merge stops
+# on conflicts, you resolve them and finish with `git commit`, which fires this
+# hook instead. We act ONLY when HEAD is a merge commit (2+ parents), so ordinary
+# commits pay just one cheap `git rev-list` and skip out. Clean merges never reach
+# here (git doesn't run commit hooks for its own merge commit), so no double-logging.
+
+repo=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+
+# Count parents of HEAD; a merge commit has 2+. Fast path for normal commits.
+parents=$(git rev-list --parents -n 1 HEAD 2>/dev/null | wc -w | tr -d ' ')
+[ "${parents:-0}" -ge 3 ] || exit 0   # 1 (self) + 2 parents = 3 tokens
+
+[ -f "$repo/scripts/log-prompt.mjs" ] || exit 0
+command -v node >/dev/null 2>&1 || exit 0
+
+now=$(git rev-parse --short HEAD 2>/dev/null || echo "?")
+p1=$(git rev-parse --short 'HEAD^1' 2>/dev/null || echo "?")
+p2=$(git rev-parse --short 'HEAD^2' 2>/dev/null || echo "?")
+subject=$(git log -1 --format='%s' HEAD 2>/dev/null)
+
+note="post-commit auto-note: merge commit $now (parents $p1 + $p2) — \"$subject\". Review the conflict resolution and edit this note with what you kept if it mattered."
+node "$repo/scripts/log-prompt.mjs" --type merge "$note" >/dev/null 2>&1 || true
+exit 0

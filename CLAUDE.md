@@ -41,15 +41,24 @@ writes to it anymore; leave it as-is.
 Each entry is JSON Lines with a `type` field:
 
 - `{timestamp, author, type: "prompt", prompt}` — a developer prompt (the default).
-- `{timestamp, author, type: "merge", note}` — a merge / conflict-resolution note. **Whenever you
-  resolve a merge conflict, log what you did to your personal log.**
+- `{timestamp, author, type: "merge", note}` — a merge / conflict-resolution note.
 
 Author is taken automatically from `git config user.name`/`user.email`.
 
-Prompt logging happens automatically in Claude Code via a `UserPromptSubmit` hook
+**Prompts** are logged automatically in Claude Code via a `UserPromptSubmit` hook
 (`.claude/hooks/log-prompt.sh`, registered in `.claude/settings.json`) — no manual step needed
-for Claude Code sessions started after this hook was installed. For other tools, manual logging,
-or merge notes:
+for Claude Code sessions started after this hook was installed.
+
+**Merges** are logged automatically by version-controlled git hooks in `.githooks/` (activated by
+`git config core.hooksPath .githooks`, which the `prepare` script wires up on `pnpm install` — so
+just run `pnpm install` once per clone):
+
+- `.githooks/post-merge` notes every clean `git merge` / `git pull` (auto-merge or fast-forward).
+- `.githooks/post-commit` notes a conflict-resolved merge (which stops the merge, so `post-merge`
+  never fires) when you commit the resolution. Between them, each merge is noted exactly once.
+
+The auto-note records the commit range and subjects; **edit it to add what you actually kept** if a
+conflict resolution was non-trivial. For other tools, manual logging, or enriching a note:
 
 ```
 pnpm log-prompt -- "the prompt text"
