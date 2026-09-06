@@ -1,0 +1,56 @@
+id: L-2026-09-06-ascend-002403-001
+type: insight
+timestamp: '2026-09-06T00:24:03.091Z'
+author: ascend
+agent:
+  provider: anthropic
+  model: claude-opus-4-6
+title: 'Design: agentic-purchase personhood gate + merchant MCP (scoping)'
+summary: 'Kicked off design of the next major feature: letting AI agents on a user''s machine discover this store, query products, and initiate purchases on the user''s behalf — where an AGENT-initiated purchase triggers a World ID selfie/Face Auth personhood check, while a human''s in-browser checkout does not. Confirmed both pieces are greenfield (no World ID or MCP code exists). Locked scope decisions; still ideating the "hard part" (agent purchase-initiation flow + selfie handoff + anti-spoof).'
+symbols_touched:
+  - '#checkout-route'
+  - '#storefront'
+  - ^checkout-authorized
+  - ^authenticated
+symbols_created:
+  - '#merchant-mcp'
+  - ^personhood-verified
+  - $agent-purchase-flow
+decisions:
+  - id: D-mcp-scope-ourstore
+    decision: Merchant MCP is hardcoded to our storefront API for the hackathon; the 'compliant storefronts' generalization (MCP takes any compliant store base URL + a discovery contract) is deferred.
+    rationale: Fastest path to a working demo; the generic contract is a follow-up, not needed to prove the concept.
+  - id: D-build-mock-verifier
+    decision: We (user + assistant) build the merchant MCP, the server-side ^personhood-verified gate, AND a mock/stub selfie verifier now, so the full agent->selfie->purchase flow is demoable before the real World ID integration lands.
+    rationale: Least blocked; the mock's seam is exactly 'verify the proof', so the real World ID Face Auth swaps in cleanly.
+  - id: D-gate-by-initiator
+    decision: 'The personhood/selfie gate fires by INITIATOR, not by amount: agent-initiated purchases (via the merchant MCP) require the selfie; human in-browser checkout does not.'
+    rationale: Core value prop — an AI cannot move the user's money without live proof a real human is authorizing it; a present human at checkout is already demonstrably present.
+  - id: D-selfie-ownership
+    decision: The World ID selfie/Face Auth check is the USER's piece (originally thought to be Darren's).
+    rationale: User confirmed ownership; assistant + user own the MCP + gate wiring + mock verifier that consume it.
+learnings:
+  - Both the World ID selfie check and the merchant MCP are greenfield — repo grep found no world/selfie/orb/proof or MCP scaffolding; the only 'verify' hits are JWT verification and an email-shape comment.
+  - 'The existing checkout already has the right shape to extend: ^checkout-authorized gate + a 428 ''confirmation_required'' step-up (confirm -> resubmit). The selfie becomes a new ^personhood-verified gate on the agent path, reusing that step-up pattern but with a World ID proof instead of a boolean.'
+  - 'Hard problem to design next: (1) agent purchase-initiation flow when the human isn''t at the screen; (2) how the selfie proof reaches a headless-agent''s human (World ID Face Auth needs the human''s World App/phone — our server only verifies a returned proof); (3) anti-spoof — the human/agent distinction must come from the AUTH CHANNEL (an ''agent grant'' the MCP holds that always takes the gated path), never the request body, since an agent claiming ''a human did this'' to skip the selfie is the attack.'
+  - Leaning toward Option A (async deep link + poll) for the selfie handoff over B (session pre-authorization) or C (per-purchase local widget); not yet final. A gives the strongest per-purchase proof and the best demo; B maps onto existing spend caps and is smoother but binds the selfie to a session window rather than the specific purchase.
+tags:
+  - design
+  - agentic-commerce
+  - world-id
+  - mcp
+  - personhood
+  - scoping
+body: |-
+  Context: continues from the storefront+auth build. Storefront (React/Vite SPA) + email/password JWT auth are built, committed (04459e3), and now runtime-validated locally (Neon connected, products seeded, signup/login working, grid rendering). Fixed a CORS bug along the way: server/src/index.ts used `cors({ origin: process.env.CLIENT_ORIGIN ?? true })` — `??` treats an empty CLIENT_ORIGIN= from .env as a real value, so cors matched origin "" and sent no Access-Control-Allow-Origin; changed to `|| true`.
+
+  Existing buy flow ($checkout-flow) is coded end-to-end: client Buy button -> POST /checkout (JWT) -> spend policy (per-tx $50 / daily $200 caps, $10 auto-approve threshold w/ 428 confirm) -> per-user Circle developer-controlled wallet (ARC-TESTNET) -> USDC transfer -> order 'submitted' -> Circle webhook flips to confirmed/failed. To actually execute a purchase it needs: MERCHANT_PAYOUT_ADDRESS (currently empty), valid Circle creds + registered entity secret + funded wallet, and (for confirmation) a publicly reachable webhook. Known code gap: /checkout has no try/catch or async error middleware, so an async throw (e.g. missing payout address) hangs the request in Express 4. User explicitly said the real Circle purchase is NOT the priority right now.
+
+  The priority is the agentic layer: a "merchant MCP" (name TBD) running on the user's machine so their AI agent can browse this store and initiate purchases on their behalf, gated by the user's World ID selfie check.
+
+  Next session: ideate the "hard part" — the agent purchase-initiation flow and the selfie handoff (Options A/B/C above), plus the agent-grant auth mechanism that makes agent-initiation unspoofable.
+confidence: 0.8
+git_context:
+  ref: 04459e3aff197df0aca101654ed1feb4456f15d1
+  branch: feat/storefront-and-auth
+  dirty: true

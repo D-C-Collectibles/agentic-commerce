@@ -1,31 +1,37 @@
 {
-  "sessionId": "smtnru8kr",
-  "startTime": 1788575780331,
-  "lastActivity": 1788576944616,
+  "sessionId": "smtnu5x0e",
+  "startTime": 1788579684446,
+  "lastActivity": 1788659762317,
   "breadcrumbs": [
     {
-      "timestamp": 1788575874735,
+      "timestamp": 1788579706115,
       "action": "tool-call",
       "tool": "paradigm_session_recover",
       "summary": "session_recover"
     },
     {
-      "timestamp": 1788576401783,
+      "timestamp": 1788654243031,
       "action": "tool-call",
       "tool": "paradigm_lore_record",
-      "summary": "lore_record: Storefront + email/password auth — assessment & scope"
+      "summary": "lore_record: Design: agentic-purchase personhood gate + merchant MCP (sco"
     },
     {
-      "timestamp": 1788576944501,
+      "timestamp": 1788658799170,
+      "action": "tool-call",
+      "tool": "paradigm_lore_record",
+      "summary": "lore_record: Decision: Option A (async deep-link + poll) for agent-purcha"
+    },
+    {
+      "timestamp": 1788659762206,
       "action": "tool-call",
       "tool": "paradigm_reindex",
       "summary": "Rebuilt static index files"
     },
     {
-      "timestamp": 1788576998088,
+      "timestamp": 1788660320655,
       "action": "tool-call",
       "tool": "paradigm_lore_record",
-      "summary": "lore_record: Built storefront SPA + email/password JWT auth"
+      "summary": "lore_record: Built agent-purchase server path + merchant MCP (Option A, m"
     }
   ],
   "symbolsModified": [],

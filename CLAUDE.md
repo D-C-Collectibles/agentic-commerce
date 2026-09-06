@@ -27,16 +27,39 @@ This repo uses **pnpm**, not npm — `pnpm install`, `pnpm run <script>` (or `pn
 `server/.env.example`).
 
 Public endpoints: `GET /products` (#products-route) and `POST /auth/signup` + `POST /auth/login`
-(#auth-route). Auth is email + bcrypt password → a signed JWT (`JWT_SECRET` env, `sub` = user id)
-that satisfies `^authenticated` on `/checkout`. The Circle client inits lazily, so the server boots
-to serve products/auth even without `CIRCLE_API_KEY` (only checkout needs it).
+(#auth-route). Auth is email + bcrypt password → a signed JWT (`JWT_SECRET` env, `sub` = user id,
+`aud` = "user"/"agent") that satisfies `^authenticated` on `/checkout`. The Circle client inits
+lazily, so the server boots to serve products/auth even without `CIRCLE_API_KEY`.
+
+Two checkout legs share primitives via #orders-service and settle through #payment-service
+(`PAYMENTS_MODE=mock` — the default — settles instantly with no Circle creds; `PAYMENTS_MODE=circle`
+does a real Arc-testnet USDC transfer):
+- **Human** (in-browser): `POST /checkout` — a user-audience JWT (^authenticated) + spend caps and a
+  428 confirm above the auto-approve threshold (^checkout-authorized), then an immediate charge.
+- **Agent**: `POST /agent/grant` (mints an agent grant), `POST /agent/checkout` (initiates but does
+  NOT charge — returns a `verification_required` handoff), `GET /agent/purchase/:orderId` (poll).
+  An agent-initiated purchase is gated by ^personhood-verified: a World ID Selfie Check the human
+  completes at `GET /verify/:sessionId` (#verify-route, currently mocked in #verification-service)
+  before any money moves. The user/agent split is enforced by the JWT audience, so an agent can't
+  take the ungated human path.
 
 ## Frontend
 
 `client/` is a React + Vite + TypeScript SPA — the storefront (#storefront): product grid plus
 email/password account creation and JWT-gated checkout. `pnpm install && pnpm dev` inside `client/`
 (Vite on :5173). It calls the API at `VITE_API_URL` (default `http://localhost:3000`, see
-`client/.env.example`); the JWT is kept in `localStorage` and sent as `Authorization: Bearer`.
+`client/.env.example`); the JWT is kept in `localStorage` and sent as `Authorization: Bearer`. When
+signed in, an **Agent access** panel (#storefront-agent-access) mints an agent grant to paste into
+the merchant MCP.
+
+## Merchant MCP
+
+`mcp/` is a stdio MCP server (`@agentic-commerce/merchant-mcp`, #merchant-mcp) that lets an AI agent
+on the user's machine shop the storefront on the user's behalf: `list_products`, `initiate_purchase`,
+`check_purchase_status`. It holds an agent grant (`AGENT_GRANT` env) and points at `STORE_API_URL`.
+Every purchase it starts still requires the human's World ID selfie check — the MCP surfaces the
+verification URL and polls. `pnpm install && pnpm build` inside `mcp/`; see `mcp/README.md` for
+Claude Code registration. Scoped to one store for now; "any compliant storefront" is a follow-up.
 
 ## Hackathon prompt logging
 

@@ -173,3 +173,44 @@ button.link {
   padding: 0;
   font-weight: 500;
 }
+
+/* Agent access */
+.agent-access {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 22px;
+  display: grid;
+  gap: 12px;
+}
+
+.agent-access h2 {
+  margin: 0;
+}
+
+.agent-access .grant {
+  display: grid;
+  gap: 10px;
+}
+
+.agent-access label {
+  display: grid;
+  gap: 6px;
+}
+
+.agent-access textarea {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.8rem;
+  resize: vertical;
+}
+
+.agent-access code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+}

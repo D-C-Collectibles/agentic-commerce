@@ -1,6 +1,7 @@
 // #storefront-app — layout shell. Header shows session state; body is the product
 // grid, with the auth panel shown alongside when signed out.
 
+import { AgentAccess } from "./AgentAccess";
 import { AuthPanel } from "./AuthPanel";
 import { Storefront } from "./Storefront";
 import { AuthProvider, useAuth } from "./auth";
@@ -42,6 +43,7 @@ function Shell() {
           <p className="muted">Pay in USDC from your custodied wallet. Spend caps enforced server-side.</p>
           <Storefront />
         </div>
+        {user && <AgentAccess />}
       </main>
     </>
   );

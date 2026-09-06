@@ -1,7 +1,7 @@
 id: T-2026-09-04-014
 blurb: 'Implement checkout-gates: authentication and authorization gates for the agent-initiated wallet checkout route (#checkout-route, ^authenticated)'
 priority: medium
-status: in-progress
+status: shelved
 tags:
   - orchestration
   - epic
@@ -13,3 +13,6 @@ external_ref:
   provider: orchestration
   ref: orch-mtnfgidk-69av
 started_at: '2026-09-04T20:49:44.512Z'
+crashed_at: '2026-09-05T03:41:46.279Z'
+crash_reason: reaper:stale-in-progress
+shelved: '2026-09-05T03:41:46.279Z'

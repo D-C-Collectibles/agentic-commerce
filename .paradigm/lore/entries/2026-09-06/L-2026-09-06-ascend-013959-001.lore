@@ -1,0 +1,43 @@
+id: L-2026-09-06-ascend-013959-001
+type: insight
+timestamp: '2026-09-06T01:39:59.176Z'
+author: ascend
+agent:
+  provider: anthropic
+  model: claude-opus-4-6
+title: 'Decision: Option A (async deep-link + poll) for agent-purchase personhood gate'
+summary: 'Locked Option A as the MVP handoff for agent-initiated purchases: agent initiates -> server mints a World ID connect URL -> agent surfaces it to the human -> human completes Selfie Check in World App -> backend verifies proof -> purchase proceeds; agent polls for status. Goal: prove the flow end-to-end with a MOCK verifier first, then do UX/bells-and-whistles (storefront polish, Chrome-extension surface, MCP docs) over the week. Grounded in World ID docs research that confirmed the connect-URL seam.'
+symbols_touched:
+  - '#checkout-route'
+  - '#merchant-mcp'
+  - ^personhood-verified
+  - $agent-purchase-flow
+  - ^checkout-authorized
+decisions:
+  - id: D-handoff-option-a
+    decision: Use Option A (async deep-link + poll) for the agent-initiated selfie handoff, verified first with a mock verifier; UX polish, Chrome-extension surface, and MCP docs come later in the week.
+    rationale: World ID's own flow produces a 'connect URL' (QR/deep link) that is exactly the out-of-band artifact an agent can hand to the human, so A is the natural fit; it also gives the strongest per-purchase proof and the most compelling demo. Prove-then-polish keeps us unblocked.
+  - id: D-selfie-widget-hosting
+    decision: MVP surfaces the World ID connect URL directly from the agent/MCP (print/QR); the Chrome-extension-hosted IDKit widget is a later polish option, not MVP.
+    rationale: Fastest path to a working demo; the extension is really a 'where the widget lives' choice and can be added without changing the server contract.
+learnings:
+  - World ID 'Selfie Check' is a real Beta credential (liveness+uniqueness from a selfie), alongside Proof of Human (Orb) and Document Check.
+  - 'World ID verification is client-widget-driven via IDKit: frontend gets an RP signature from its backend (signing key), builds an IDKit request (app_id, rp_id, action), which produces a ''connect URL'' -> QR on desktop / deep link into World App on mobile -> human completes in World App -> returns a ZK proof (proof, nullifier, issuer_schema_id).'
+  - Backend verifies by forwarding the payload to POST https://developer.world.org/api/v4/verify/{rp_id}. This verify step is exactly what our mock verifier stands in for.
+  - There is NO documented headless/server-initiated selfie flow — verification requires a human-facing widget + the World App. That constraint is the feature working as intended (personhood), and the connect URL is the seam that lets an agent hand off to the human.
+  - 'Real integration will later require: a registered app in the World Developer Portal (app_id/rp_id), a server-side signing key to mint RP signatures, and the /api/v4/verify call — all skipped by the mock.'
+tags:
+  - design
+  - decision
+  - world-id
+  - mcp
+  - personhood
+  - option-a
+body: 'Next: build breakdown to make $agent-purchase-flow demoable end-to-end with the mock verifier. Ownership recap: the World ID Selfie Check itself is the USER''s piece; the merchant MCP + server-side ^personhood-verified gate + mock verifier are ours. MCP scope stays ''our store only'' for now. Docs to read: docs.world.org/world-id/overview, docs.world.org/world-id/idkit/integrate, docs.world.org/llms.txt (index for the Selfie-Check-specific + MiniKit/deep-link pages, not yet pulled).'
+linked_lore:
+  - L-2026-09-06-ascend-002403-001
+confidence: 0.85
+git_context:
+  ref: 04459e3aff197df0aca101654ed1feb4456f15d1
+  branch: feat/storefront-and-auth
+  dirty: true

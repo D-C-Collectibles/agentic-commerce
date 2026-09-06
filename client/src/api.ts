@@ -27,6 +27,11 @@ export interface CheckoutResult {
   state: string;
 }
 
+export interface AgentGrantResult {
+  agentGrant: string;
+  note: string;
+}
+
 // Carries the HTTP status + parsed error body so callers can branch on
 // 401 / 402 (spend cap) / 428 (confirmation required) precisely.
 export class ApiError extends Error {
@@ -72,4 +77,7 @@ export const api = {
     token: string,
     input: { sku: string; quantity: number; checkoutConfirmed?: boolean },
   ) => request<CheckoutResult>("/checkout", { method: "POST", body: input, token }),
+
+  createAgentGrant: (token: string) =>
+    request<AgentGrantResult>("/agent/grant", { method: "POST", token }),
 };

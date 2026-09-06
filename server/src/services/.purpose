@@ -10,12 +10,44 @@ auth:
   description: >
     Email + password accounts for the storefront demo. Passwords are bcrypt-hashed
     into the `users` table; createUser/authenticateUser issue a signed JWT whose
-    `sub` claim is the user id. verifyToken checks signature + expiry and backs the
-    ^authenticated gate (replacing the earlier Bearer=userId stand-in). JWT_SECRET is
-    read lazily from env so unauthenticated routes still boot without it.
-  gates: [^authenticated]
+    `sub` claim is the user id and `aud` claim is "user". signAgentGrant issues an
+    "agent"-audience grant for the agent path. verifyToken/verifyBearer check
+    signature + expiry and return the user id + audience, backing ^authenticated
+    (audience "user") and ^agent-authorized (audience "agent"). JWT_SECRET is read
+    lazily from env so unauthenticated routes still boot without it.
+  gates: [^authenticated, ^agent-authorized]
   signals: [!user-registered, !user-logged-in]
   new_tables: [users]
   ponytail: >
     Tech-demo grade. Intentionally omitted: email verification, password reset,
-    rate limiting, refresh/rotation, token revocation. Min password length 6.
+    rate limiting, refresh/rotation, token revocation (agent grants are long-lived
+    and not yet revocable). Min password length 6.
+
+orders:
+  symbol: "#orders-service"
+  description: >
+    Primitives shared by both checkout legs (#checkout-route, #agent-route): the
+    products/orders schema, price lookup, the spend policy (per-tx $50 / daily $200
+    caps; $10 human auto-approve threshold), and order creation/status reads. Kept in
+    one module so the two sibling paths enforce identical rules and can't drift.
+  new_tables: [products, orders]
+
+payment:
+  symbol: "#payment-service"
+  description: >
+    Abstracts money movement so both checkout legs share one implementation and the
+    flow runs without Circle creds in development. PAYMENTS_MODE=mock (default) settles
+    instantly (order -> confirmed); PAYMENTS_MODE=circle routes through #wallet-service
+    for a real Arc-testnet USDC transfer (order -> submitted, awaiting the Circle
+    webhook). Owns merchantPayoutAddress() (placeholder in mock, required in circle).
+
+verification:
+  symbol: "#verification-service"
+  description: >
+    The ^personhood-verified gate for agent-initiated purchases. Creates single-use,
+    order-bound, short-TTL (5 min) verification sessions and marks them verified via an
+    atomic UPDATE so a purchase settles exactly once. This is where World ID Selfie
+    Check (Face Auth) plugs in — markSessionVerified is called only after a valid proof
+    (mocked today by #verify-route). Read lazily; references orders(id).
+  gates: [^personhood-verified]
+  new_tables: [verification_sessions]

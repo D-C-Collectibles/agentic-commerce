@@ -11,6 +11,20 @@ gates:
       Per-user spending-policy check (per-tx/daily USDC caps) plus an explicit
       !checkout-confirmed signal from the user for amounts above the auto-approve
       threshold. Runs after ^authenticated, before any wallet transfer is submitted.
+  ^agent-authorized:
+    description: >
+      Valid agent grant required. A signed JWT with audience "agent" (Authorization:
+      Bearer <grant>) minted by #agent-route POST /agent/grant for a signed-in human.
+      Distinct from ^authenticated (a human user token) so an agent cannot use the
+      ungated human /checkout, and a human token cannot start an agent purchase.
+  ^personhood-verified:
+    description: >
+      Live proof-of-personhood (World ID Selfie Check / Face Auth) tied to a specific
+      agent-initiated order. #agent-route creates a pending order + a single-use,
+      short-TTL verification session; no money moves until the human completes the
+      selfie (#verify-route). Currently mocked; the real World ID proof verification
+      swaps in at #verification-service. This is the agent path's step-up, replacing the
+      human path's !checkout-confirmed.
   ^webhook-signature-verified:
     description: >
       Verifies Circle's X-Circle-Signature / X-Circle-Key-Id headers. Used instead of
@@ -24,5 +38,13 @@ routes:
     gates: []  # public — mints the ^authenticated token (#auth-route)
   POST /checkout:
     gates: [^authenticated, ^checkout-authorized]
+  POST /agent/grant:
+    gates: [^authenticated]  # human authorizes an agent; mints the ^agent-authorized grant (#agent-route)
+  POST /agent/checkout:
+    gates: [^agent-authorized, ^checkout-authorized]  # initiates; charge waits for ^personhood-verified
+  GET /agent/purchase/:orderId:
+    gates: [^agent-authorized]  # poll outcome; scoped to the grant's own user
+  GET /verify/:sessionId:
+    gates: [^personhood-verified]  # human-facing selfie checkpoint (#verify-route); completing it satisfies the gate
   POST /webhooks/circle:
     gates: [^webhook-signature-verified]
