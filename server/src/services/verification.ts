@@ -63,6 +63,21 @@ export async function getSession(sessionId: string): Promise<VerificationSession
   return rows[0] ?? null;
 }
 
+export interface SessionContext {
+  status: VerificationStatus;
+  usable: boolean;
+}
+
+// Whether a session can still be verified (pending and not past its TTL) — for the
+// SPA's verification page to decide between showing the widget or an "expired" message.
+export async function getSessionForContext(sessionId: string): Promise<SessionContext | null> {
+  const session = await getSession(sessionId);
+  if (!session) return null;
+  const usable =
+    session.status === VERIFICATION_STATUS.pending && new Date(session.expires_at).getTime() > Date.now();
+  return { status: session.status, usable };
+}
+
 // Latest session for an order, for status polling.
 export async function getLatestSessionForOrder(orderId: string): Promise<VerificationSession | null> {
   const { rows } = await pool.query<VerificationSession>(

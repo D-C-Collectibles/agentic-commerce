@@ -1,5 +1,5 @@
 version: '1.0'
-generated: '2026-09-06T01:56:02.319Z'
+generated: '2026-09-06T03:04:06.703Z'
 personas: {}
 chains: {}
 gate_coverage: {}
@@ -13,4 +13,6 @@ uncovered_routes:
   - POST /agent/checkout
   - GET /agent/purchase/:orderId
   - GET /verify/:sessionId
+  - GET /verify-context/:sessionId
+  - POST /verify/:sessionId
   - POST /webhooks/circle

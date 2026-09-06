@@ -45,12 +45,14 @@ agent:
 verify:
   symbol: "#verify-route"
   description: >
-    Human-facing ^personhood-verified checkpoint for agent-initiated purchases. GET
-    /verify/:sessionId is opened by the human from a link/QR the agent surfaced; it marks
-    the verification session verified (via #verification-service) and settles the order
-    via #payment-service exactly once (single-use, idempotent on re-open). MOCK today:
-    loading the page stands in for the World ID Selfie Check widget + proof verification,
-    which will replace the handler body. Returns an HTML status page.
+    Human-facing ^personhood-verified checkpoint for agent-initiated purchases, opened
+    from a link the agent surfaced. Two modes (#worldid-service): in MOCK, GET
+    /verify/:sessionId renders a click-through page that settles the order (disabled in
+    world mode so it can't bypass the selfie). In WORLD, the SPA renders the World ID
+    Selfie Check widget, reads GET /verify-context/:sessionId for the RP signature, and
+    POSTs the proof to POST /verify/:sessionId, which verifies it with World before
+    settling. Settlement is shared and single-use (via #verification-service +
+    #payment-service) either way.
   gates: [^personhood-verified]
   signals: [!personhood-verified, !purchase-completed]
 

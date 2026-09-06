@@ -32,6 +32,24 @@ export interface AgentGrantResult {
   note: string;
 }
 
+export interface WorldRpContext {
+  rp_id: string;
+  nonce: string;
+  created_at: number;
+  expires_at: number;
+  signature: string;
+}
+
+// Everything the verification page needs to run the personhood check for a session.
+export interface VerificationContext {
+  status: string;
+  usable: boolean;
+  mode?: "mock" | "world";
+  appId?: string;
+  action?: string;
+  rpContext?: WorldRpContext;
+}
+
 // Carries the HTTP status + parsed error body so callers can branch on
 // 401 / 402 (spend cap) / 428 (confirmation required) precisely.
 export class ApiError extends Error {
@@ -80,4 +98,15 @@ export const api = {
 
   createAgentGrant: (token: string) =>
     request<AgentGrantResult>("/agent/grant", { method: "POST", token }),
+
+  getVerificationContext: (sessionId: string) =>
+    request<VerificationContext>(`/verify-context/${sessionId}`),
+
+  // Forwards the IDKit proof to the backend, which verifies it with World and settles.
+  submitWorldProof: (sessionId: string, proof: unknown) =>
+    request<{ status: string }>(`/verify/${sessionId}`, { method: "POST", body: proof }),
 };
+
+// Base URL of the storefront API, exported so the verify page can redirect to the
+// server's mock verification page when the deployment is in mock mode.
+export const apiBaseUrl = API_URL;

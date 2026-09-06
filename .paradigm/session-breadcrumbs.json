@@ -1,7 +1,7 @@
 {
   "sessionId": "smtnu5x0e",
   "startTime": 1788579684446,
-  "lastActivity": 1788659762317,
+  "lastActivity": 1788663876307,
   "breadcrumbs": [
     {
       "timestamp": 1788579706115,
@@ -32,6 +32,24 @@
       "action": "tool-call",
       "tool": "paradigm_lore_record",
       "summary": "lore_record: Built agent-purchase server path + merchant MCP (Option A, m"
+    },
+    {
+      "timestamp": 1788663846601,
+      "action": "tool-call",
+      "tool": "paradigm_reindex",
+      "summary": "Rebuilt static index files"
+    },
+    {
+      "timestamp": 1788663876156,
+      "action": "tool-call",
+      "tool": "paradigm_lore_record",
+      "summary": "lore_record: Wired real World ID Selfie Check (VERIFICATION_MODE=world)"
+    },
+    {
+      "timestamp": 1788667171751,
+      "action": "tool-call",
+      "tool": "paradigm_lore_record",
+      "summary": "lore_record: World ID live test: Selfie Check access-gated; fixed action "
     }
   ],
   "symbolsModified": [],
