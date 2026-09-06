@@ -1,0 +1,49 @@
+id: L-2026-09-05-ascend-024641-001
+type: milestone
+timestamp: '2026-09-05T02:46:41.820Z'
+author: ascend
+agent:
+  provider: anthropic
+  model: claude-opus-4-6
+title: Storefront + email/password auth — assessment & scope
+summary: 'Assessed repo state before starting Matt''s assigned work: a public storefront with product display, and email+password account creation (basic, tech-demo grade). Backend has wallet-checkout scaffold (Circle DCW, spend caps, orders/products tables) but NO frontend and NO real auth (checkout uses a Bearer=userId hackathon stand-in). World ID selfie validation is a later phase, deferred.'
+symbols_touched:
+  - '#checkout-route'
+  - '#wallet-service'
+  - ^authenticated
+  - '#storefront'
+  - '#account-creation'
+tags:
+  - storefront
+  - auth
+  - scope
+  - assessment
+  - hackathon
+body: |-
+  ## Assigned to Matt (this thread)
+  1. **Storefront + products display** (public catalog UI).
+  2. **Account creation** — email + basic password only, tech-demo grade (not production auth).
+  3. **LATER (deferred, do not build yet):** World.org (World ID) selfie-check validation — will be triggered when agents purchase on the user's behalf. Matt will explain the design later.
+
+  ## Current backend state (server/, Express + TS + Neon Postgres)
+  - **Routes:** `POST /checkout` (#checkout-route, full spend-cap logic: per-tx $50, daily $200, auto-approve <$10 else 428 confirmation_required), `POST /webhooks/circle` (#circle-webhook-route, Circle transaction-state source of truth), `/health`, `/health/db`. No product-listing or auth endpoints.
+  - **Services:** `wallet.ts` (#wallet-service) — Circle Developer-Controlled Wallets wrapper, one server-custodied wallet per user, entity secret from env.
+  - **Tables:** `products (sku, name, price_usdc)`, `orders (full lifecycle)`. Schema created via `create table if not exists` (no migration framework). Seeded by `seed-products.ts` (Widget $5, Gadget $25, Gizmo $45).
+  - **Auth today = hackathon stand-in:** `Authorization: Bearer <userId>` where the bearer value literally IS the user id — unsigned, no expiry, no users table, no password. Explicitly flagged in code (checkout.ts requireUserId) and in ^authenticated's portal.yaml gate as needing real login + sessions/JWT + users table.
+
+  ## Gaps to fill for the assigned work
+  - **No frontend exists at all** (no client/web/frontend dir). Storefront is greenfield.
+  - **No product-list API** — products are only read internally during checkout; need a public `GET /products`.
+  - **No users table, no signup/login, no password hashing.** Real ^authenticated needs: users table (email unique, password_hash), signup/login endpoints, a real token to replace Bearer=userId, and wiring that token into checkout.
+
+  ## Open decisions (to resolve with Matt before building)
+  - Frontend stack (separate React/Vite SPA vs. server-rendered HTML from Express vs. Next.js). Repo is pnpm-only, Express backend, no frontend scaffold yet.
+  - Token model for auth: keep it simple but real-ish (bcrypt password hash + a signed/opaque session token), replacing the Bearer=userId stand-in in checkout's ^authenticated.
+
+  ## Conventions in force
+  - pnpm-only; Paradigm symbols/purposes; per-person prompt logging to prompts/matt.jsonl (auto via hook). Review intentionally light during stand-up, tightening as integrations land (per HANDOFF.md).
+confidence: 0.9
+git_context:
+  ref: 49467a82450824357c40fd81db30444ac2f9eef3
+  branch: main
+  dirty: true

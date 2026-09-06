@@ -1,0 +1,92 @@
+id: L-2026-09-05-ascend-025638-001
+type: agent-session
+timestamp: '2026-09-05T02:56:38.092Z'
+author: ascend
+agent:
+  provider: anthropic
+  model: claude-opus-4-6
+title: Built storefront SPA + email/password JWT auth
+summary: 'Implemented Matt''s assigned work on branch feat/storefront-and-auth: a public GET /products endpoint + React/Vite storefront SPA (client/), and real email/password accounts (users table, bcrypt) issuing signed JWTs that replace the Bearer=userId stand-in at checkout''s ^authenticated gate. Made the Circle client lazy so the server boots for products/auth without Circle creds. Server + client type-check clean; client production build passes. Not yet runtime-smoke-tested (no local DATABASE_URL/JWT_SECRET).'
+symbols_touched:
+  - '#auth-service'
+  - '#auth-route'
+  - '#products-route'
+  - '#storefront'
+  - '#checkout-route'
+  - '#wallet-service'
+  - ^authenticated
+symbols_created:
+  - '#auth-service'
+  - '#auth-route'
+  - '#products-route'
+  - '#storefront'
+files_created:
+  - server/src/services/auth.ts
+  - server/src/routes/auth.ts
+  - server/src/routes/products.ts
+  - client/package.json
+  - client/tsconfig.json
+  - client/vite.config.ts
+  - client/index.html
+  - client/src/main.tsx
+  - client/src/App.tsx
+  - client/src/api.ts
+  - client/src/auth.tsx
+  - client/src/AuthPanel.tsx
+  - client/src/Storefront.tsx
+  - client/src/styles.css
+  - client/src/vite-env.d.ts
+  - client/.env.example
+  - client/.gitignore
+files_modified:
+  - server/src/index.ts
+  - server/src/routes/checkout.ts
+  - server/src/services/wallet.ts
+  - server/package.json
+  - server/.env.example
+  - server/src/routes/.purpose
+  - server/src/services/.purpose
+  - portal.yaml
+  - CLAUDE.md
+verification:
+  status: partial
+  details:
+    server_typecheck: pass
+    client_typecheck: pass
+    client_build: pass
+    runtime_smoke: untested
+tags:
+  - storefront
+  - auth
+  - jwt
+  - react
+  - vite
+  - hackathon
+body: |-
+  ## Backend (server/)
+  - `#auth-service` (src/services/auth.ts): bcrypt hashing (10 rounds), `users` table (uuid id, unique email, password_hash), signed JWT (`sub`=user id, 7d TTL). JWT_SECRET read lazily so /products works without it. createUser (409 on email conflict), authenticateUser, verifyToken.
+  - `#auth-route` (src/routes/auth.ts): POST /auth/signup (201, 400 invalid_email/weak_password min 6, 409 email_taken), POST /auth/login (generic 401 invalid_credentials — no field leak). Both return { token, user }.
+  - `#products-route` (src/routes/products.ts): public GET /products → { products: [{sku,name,price_usdc}] }, prices as strings.
+  - `#checkout-route`: requireUserId now calls verifyToken (JWT) instead of Bearer=userId. `sub` claim → order user_id.
+  - index.ts: added cors (origin = CLIENT_ORIGIN ?? true) and mounted auth + products routers.
+  - wallet.ts: Circle client now lazy-inits on first use (circle() getter) instead of throwing at import — lets the server boot for products/auth without CIRCLE_API_KEY.
+  - .env.example: added JWT_SECRET, CLIENT_ORIGIN. package.json: +bcryptjs, jsonwebtoken, cors (+types).
+
+  ## Frontend (client/) — React 18 + Vite 5 + TS
+  - api.ts (typed client, ApiError carrying status+body), auth.tsx (session context, JWT in localStorage), AuthPanel.tsx (login/signup toggle), Storefront.tsx (product grid + per-sku checkout), App.tsx shell, styles.css.
+  - Checkout UX handles server spend-policy: 428 → in-app confirm button (NOT window.confirm, to avoid blocking) that resends checkoutConfirmed:true; 402 → cap message; 401 → logout + re-sign-in prompt; 200 → order placed.
+
+  ## Paradigm
+  - Updated routes/.purpose (+auth-route, +products-route), services/.purpose (+auth-service), portal.yaml (^authenticated now JWT; registered public routes). Reindexed.
+
+  ## Not done / next
+  - No runtime smoke test (needs DATABASE_URL + JWT_SECRET; wallet path needs Circle creds + MERCHANT_PAYOUT_ADDRESS).
+  - Quantity fixed to 1 in the UI (no cart). No product images.
+  - World ID selfie validation still deferred (future agent-purchase trigger).
+linked_lore:
+  - L-2026-09-05-ascend-024641-001
+confidence: 0.82
+git_context:
+  ref: 49467a82450824357c40fd81db30444ac2f9eef3
+  branch: feat/storefront-and-auth
+  dirty: true

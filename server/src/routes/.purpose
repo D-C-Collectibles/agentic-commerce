@@ -1,33 +1,58 @@
+auth:
+  symbol: "#auth-route"
+  description: >
+    Public account endpoints backing the storefront. POST /auth/signup creates a
+    user (409 email_taken on conflict), POST /auth/login verifies credentials; both
+    return { token, user } where token is a signed JWT from #auth-service. Login
+    returns a generic 401 invalid_credentials without revealing which field failed.
+    No gate — these are the entry points that mint the ^authenticated token.
+  signals: [!user-registered, !user-logged-in]
+
+products:
+  symbol: "#products-route"
+  description: >
+    Public catalog read (GET /products) for the storefront. No auth — browsing is
+    anonymous; ^authenticated only applies at /checkout. Prices returned as strings
+    (Postgres numeric) so the client never does float math on money.
+
 checkout:
   symbol: "#checkout-route"
   description: >
-    HTTP entry point for $checkout-flow. Recomputes price server-side, enforces
-    ^checkout-authorized, and hands off to #wallet-service for the actual transfer.
-    Full design in .paradigm/specs/wallet-checkout.md.
+    The HUMAN (in-browser) leg of $checkout-flow. POST /checkout requires a user-audience
+    JWT (^authenticated); an agent grant is rejected here so it can't bypass the selfie
+    path. Recomputes price server-side, enforces ^checkout-authorized (per-tx/daily caps
+    via #orders-service, plus a 428 confirmation_required above the $10 auto-approve
+    threshold), then charges immediately via #payment-service. Shares all order/spend
+    primitives with #agent-route through #orders-service. Full design in
+    .paradigm/specs/wallet-checkout.md.
   gates: [^authenticated, ^checkout-authorized]
   signals: [!payment-submitted]
-  implementation_plan:
-    authenticated: >
-      HACKATHON STAND-IN, not real auth. Read `Authorization: Bearer <userId>` header;
-      401 if missing/empty. The bearer value IS the user id, unsigned, no expiry, no
-      lookup table. Comment in code must flag this and note a real implementation needs
-      login + sessions/JWT + a users table + expiry/revocation.
-    checkout_authorized: >
-      Request body: { sku: string, quantity: number, checkoutConfirmed?: boolean }.
-      1) Look up sku in new `products` table (sku, name, price_usdc); 404 if unknown.
-      2) amountUsdc = price_usdc * quantity — never trust a client-sent amount.
-      3) destinationAddress comes from server-side MERCHANT_PAYOUT_ADDRESS env var, never
-         from the request body.
-      4) Per-tx cap $50: reject (402, cap:"per_tx") if amountUsdc > 50.
-      5) Daily cap $200: reject (402, cap:"daily") if amountUsdc + SUM(amount_usdc) from
-         this user's `orders` rows with status in ('submitted','confirmed') and
-         created_at > now() - interval '1 day' would exceed 200.
-      6) Auto-approve threshold $10: if amountUsdc > 10 and checkoutConfirmed is not
-         `true`, respond 428 confirmation_required without calling transferUsdc().
-      7) On pass: insert an `orders` row (status 'pending', fresh idempotency_key), call
-         transferUsdc(), then update the row to circle_transaction_id + status
-         'submitted'. Respond 200 { orderId, circleTransactionId, amountUsdc, state }.
-    new_tables: [products, orders]
+
+agent:
+  symbol: "#agent-route"
+  description: >
+    The agentic-commerce entry points, called by a merchant MCP holding an agent grant.
+    POST /agent/grant (^authenticated) mints the ^agent-authorized grant for a signed-in
+    human. POST /agent/checkout (^agent-authorized + ^checkout-authorized) validates and
+    reprices, applies spend caps, then creates a PENDING order + a verification session
+    and returns 202 verification_required with a human-facing selfie URL — it NEVER
+    charges. GET /agent/purchase/:orderId (^agent-authorized) polls the outcome, scoped
+    to the grant's own user. Implements $agent-purchase-flow; reuses #orders-service and
+    #payment-service so both checkout legs stay in lockstep.
+  gates: [^agent-authorized, ^checkout-authorized]
+  signals: [!agent-grant-issued, !agent-purchase-initiated]
+
+verify:
+  symbol: "#verify-route"
+  description: >
+    Human-facing ^personhood-verified checkpoint for agent-initiated purchases. GET
+    /verify/:sessionId is opened by the human from a link/QR the agent surfaced; it marks
+    the verification session verified (via #verification-service) and settles the order
+    via #payment-service exactly once (single-use, idempotent on re-open). MOCK today:
+    loading the page stands in for the World ID Selfie Check widget + proof verification,
+    which will replace the handler body. Returns an HTML status page.
+  gates: [^personhood-verified]
+  signals: [!personhood-verified, !purchase-completed]
 
 circle-webhook:
   symbol: "#circle-webhook-route"

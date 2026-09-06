@@ -1,12 +1,12 @@
 version: '1.1'
 total: 18
 open: 4
-in_progress: 3
+in_progress: 0
 done: 10
-shelved: 1
+shelved: 4
 roots:
   - T-2026-09-04-001
   - T-2026-09-04-006
   - T-2026-09-04-012
   - T-2026-09-04-014
-last_updated: '2026-09-04T20:49:44.518Z'
+last_updated: '2026-09-05T03:41:46.312Z'

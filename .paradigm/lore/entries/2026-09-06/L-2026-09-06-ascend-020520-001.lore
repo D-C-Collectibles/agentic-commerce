@@ -1,0 +1,87 @@
+id: L-2026-09-06-ascend-020520-001
+type: agent-session
+timestamp: '2026-09-06T02:05:20.658Z'
+author: ascend
+agent:
+  provider: anthropic
+  model: claude-opus-4-6
+title: Built agent-purchase server path + merchant MCP (Option A, mocked)
+summary: 'Implemented the agent-initiated purchase flow end to end with a mock personhood verifier (Option A). Server: agent grants (JWT aud=agent), POST /agent/checkout (initiate, no charge) -> verification session -> GET /verify/:sessionId (mock World ID Selfie Check) -> settle -> GET /agent/purchase/:orderId (poll). Shared #orders-service + #payment-service (PAYMENTS_MODE=mock default) across the human and agent legs; fixed the Express async-throw hang. Built the merchant MCP (mcp/, @agentic-commerce/merchant-mcp) and a storefront Agent access panel. All layers verified.'
+symbols_touched:
+  - '#checkout-route'
+  - '#auth-service'
+  - '#storefront'
+  - ^authenticated
+symbols_created:
+  - '#agent-route'
+  - '#verify-route'
+  - '#orders-service'
+  - '#payment-service'
+  - '#verification-service'
+  - '#merchant-mcp'
+  - '#storefront-agent-access'
+  - ^agent-authorized
+  - ^personhood-verified
+  - $agent-purchase-flow
+files_created:
+  - server/src/services/orders.ts
+  - server/src/services/payment.ts
+  - server/src/services/verification.ts
+  - server/src/async-handler.ts
+  - server/src/routes/agent.ts
+  - server/src/routes/verify.ts
+  - client/src/AgentAccess.tsx
+  - mcp/package.json
+  - mcp/tsconfig.json
+  - mcp/src/index.ts
+  - mcp/README.md
+  - mcp/.env.example
+  - mcp/.gitignore
+files_modified:
+  - server/src/services/auth.ts
+  - server/src/routes/checkout.ts
+  - server/src/routes/products.ts
+  - server/src/routes/auth.ts
+  - server/src/routes/webhooks.ts
+  - server/src/index.ts
+  - server/.env.example
+  - server/src/routes/.purpose
+  - server/src/services/.purpose
+  - portal.yaml
+  - client/src/App.tsx
+  - client/src/api.ts
+  - client/src/styles.css
+  - CLAUDE.md
+learnings:
+  - 'Anti-spoof is enforced at the auth layer: JWT audience (user vs agent). Human /checkout rejects agent grants; /agent/checkout rejects user tokens. An agent can''t take the ungated human path.'
+  - 'PAYMENTS_MODE=mock (default) lets the whole flow (human + agent) complete with no Circle creds; the real Circle transfer is the same #payment-service seam under PAYMENTS_MODE=circle.'
+  - Verification sessions are single-use via an atomic UPDATE ... where status='pending' ... RETURNING, so a double-clicked verify link settles the order exactly once.
+  - Express 4 does not forward async throws to error middleware; added an asyncHandler wrapper applied to every async route + a central error handler, fixing the prior /checkout hang.
+  - Background Bash tasks in this environment launch with cwd = the client dir; long-running server/vite processes must cd explicitly. TaskStop leaves the OS process alive (orphaned child keeps serving) — use PowerShell Stop-Process by port owner to truly kill.
+  - The prompt-logging UserPromptSubmit hook stopped recording after 'yes lets please continue'; backfilled this session's prompts manually into prompts/matt.jsonl. Root-cause the hook (.claude/hooks/log-prompt.sh) later.
+verification:
+  status: pass
+  details:
+    server_typecheck: pass
+    server_flow_curl: pass (10/10 incl anti-spoof)
+    mcp_typecheck: pass
+    mcp_build: pass
+    mcp_stdio_smoke: pass (initialize/tools list/list_products/initiate/poll->completed)
+    client_typecheck: pass
+    client_build: pass
+tags:
+  - build
+  - agentic-commerce
+  - mcp
+  - world-id
+  - personhood
+  - option-a
+body: 'Option A handoff: agent initiates -> server returns verification_required + a /verify/:sessionId URL -> human completes the (mocked) World ID Selfie Check -> order settles -> agent polls to ''completed''. Real World ID swaps in at #verification-service.markSessionVerified (called only after a verified proof) and #verify-route (IDKit widget instead of the mock GET). MCP is mcp/ (@agentic-commerce/merchant-mcp), our-store-only, npm-publishable later; tools: list_products, initiate_purchase, check_purchase_status. Next: open PR from feat/storefront-and-auth and merge. Later polish: real World ID integration, Chrome-extension surface, MCP generalization to any compliant storefront, storefront/UX polish.'
+linked_lore:
+  - L-2026-09-06-ascend-013959-001
+  - L-2026-09-06-ascend-002403-001
+confidence: 0.85
+git_context:
+  ref: 04459e3aff197df0aca101654ed1feb4456f15d1
+  branch: feat/storefront-and-auth
+  dirty: true

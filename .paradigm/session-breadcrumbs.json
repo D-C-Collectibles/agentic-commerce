@@ -1,19 +1,37 @@
 {
-  "sessionId": "smtng47a3",
-  "startTime": 1788556089819,
-  "lastActivity": 1788556186420,
+  "sessionId": "smtnu5x0e",
+  "startTime": 1788579684446,
+  "lastActivity": 1788659762317,
   "breadcrumbs": [
     {
-      "timestamp": 1788556186274,
+      "timestamp": 1788579706115,
       "action": "tool-call",
-      "tool": "paradigm_lore_record",
-      "summary": "lore_record: Implement wallet checkout: spend caps, Circle wallet service"
+      "tool": "paradigm_session_recover",
+      "summary": "session_recover"
     },
     {
-      "timestamp": 1788561535953,
+      "timestamp": 1788654243031,
       "action": "tool-call",
-      "tool": "paradigm_status",
-      "summary": "Checked project status"
+      "tool": "paradigm_lore_record",
+      "summary": "lore_record: Design: agentic-purchase personhood gate + merchant MCP (sco"
+    },
+    {
+      "timestamp": 1788658799170,
+      "action": "tool-call",
+      "tool": "paradigm_lore_record",
+      "summary": "lore_record: Decision: Option A (async deep-link + poll) for agent-purcha"
+    },
+    {
+      "timestamp": 1788659762206,
+      "action": "tool-call",
+      "tool": "paradigm_reindex",
+      "summary": "Rebuilt static index files"
+    },
+    {
+      "timestamp": 1788660320655,
+      "action": "tool-call",
+      "tool": "paradigm_lore_record",
+      "summary": "lore_record: Built agent-purchase server path + merchant MCP (Option A, m"
     }
   ],
   "symbolsModified": [],

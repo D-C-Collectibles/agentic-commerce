@@ -3,6 +3,7 @@
 
 import { createVerify } from "node:crypto";
 import { Router } from "express";
+import { asyncHandler } from "../async-handler.js";
 import { pool } from "../db.js";
 
 export const webhooksRouter = Router();
@@ -35,7 +36,9 @@ const STATE_MAP: Record<string, "confirmed" | "failed" | "denied" | "cancelled">
   CANCELLED: "cancelled",
 };
 
-webhooksRouter.post("/webhooks/circle", async (req, res) => {
+webhooksRouter.post(
+  "/webhooks/circle",
+  asyncHandler(async (req, res) => {
   const signature = req.header("x-circle-signature");
   const keyId = req.header("x-circle-key-id");
   const rawBody = req.rawBody;
@@ -80,4 +83,5 @@ webhooksRouter.post("/webhooks/circle", async (req, res) => {
 
   // !payment-confirmed / !payment-failed
   res.status(200).json({ ok: true });
-});
+  }),
+);

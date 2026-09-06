@@ -2,10 +2,10 @@
   "$meta": {
     "version": "1.0.0",
     "project": "agentic-commerce",
-    "generatedAt": "2026-09-05T02:24:39.234Z",
+    "generatedAt": "2026-09-06T01:56:02.276Z",
     "paradigmVersion": "0.1.0",
     "sources": {
-      "purposeFiles": 2,
+      "purposeFiles": 1,
       "portalFiles": 1,
       "premiseFiles": 0
     }
@@ -16,7 +16,7 @@
       "name": "Prompt Logging Hook",
       "symbol": "#prompt-logging-hook",
       "category": "components",
-      "path": "/Users/ascend/Documents/GitHub/agentic-commerce/.purpose",
+      "path": "C:\\Users\\ascen\\Documents\\GitHub\\agentic-commerce\\.purpose",
       "description": "UserPromptSubmit hook that auto-logs every developer prompt to prompts.jsonl (author, timestamp, prompt text) for hackathon tracking. Registered in .claude/settings.json; delegates to scripts/log-prompt.mjs.",
       "visualTags": [],
       "related": []
@@ -31,8 +31,8 @@
       "name": "Authenticated",
       "symbol": "^authenticated",
       "category": "gates",
-      "path": "/Users/ascend/Documents/GitHub/agentic-commerce",
-      "description": "Valid signed-in user session required.",
+      "path": "C:\\Users\\ascen\\Documents\\GitHub\\agentic-commerce",
+      "description": "Valid signed-in user session required. Enforced by verifying a signed JWT (Authorization: Bearer <token>) issued by #auth-service on signup/login; the `sub` claim is the user id. Backed by the `users` table (email + bcrypt password_hash). Replaces the earlier Bearer=userId hackathon stand-in.\n",
       "related": []
     },
     "checkout-authorized": {
@@ -40,18 +40,38 @@
       "name": "Checkout Authorized",
       "symbol": "^checkout-authorized",
       "category": "gates",
-      "path": "/Users/ascend/Documents/GitHub/agentic-commerce",
+      "path": "C:\\Users\\ascen\\Documents\\GitHub\\agentic-commerce",
       "description": "Per-user spending-policy check (per-tx/daily USDC caps) plus an explicit !checkout-confirmed signal from the user for amounts above the auto-approve threshold. Runs after ^authenticated, before any wallet transfer is submitted.\n",
       "related": [
         "^authenticated"
       ]
+    },
+    "agent-authorized": {
+      "id": "agent-authorized",
+      "name": "Agent Authorized",
+      "symbol": "^agent-authorized",
+      "category": "gates",
+      "path": "C:\\Users\\ascen\\Documents\\GitHub\\agentic-commerce",
+      "description": "Valid agent grant required. A signed JWT with audience \"agent\" (Authorization: Bearer <grant>) minted by #agent-route POST /agent/grant for a signed-in human. Distinct from ^authenticated (a human user token) so an agent cannot use the ungated human /checkout, and a human token cannot start an agent purchase.\n",
+      "related": [
+        "^authenticated"
+      ]
+    },
+    "personhood-verified": {
+      "id": "personhood-verified",
+      "name": "Personhood Verified",
+      "symbol": "^personhood-verified",
+      "category": "gates",
+      "path": "C:\\Users\\ascen\\Documents\\GitHub\\agentic-commerce",
+      "description": "Live proof-of-personhood (World ID Selfie Check / Face Auth) tied to a specific agent-initiated order. #agent-route creates a pending order + a single-use, short-TTL verification session; no money moves until the human completes the selfie (#verify-route). Currently mocked; the real World ID proof verification swaps in at #verification-service. This is the agent path's step-up, replacing the human path's !checkout-confirmed.\n",
+      "related": []
     },
     "webhook-signature-verified": {
       "id": "webhook-signature-verified",
       "name": "Webhook Signature Verified",
       "symbol": "^webhook-signature-verified",
       "category": "gates",
-      "path": "/Users/ascend/Documents/GitHub/agentic-commerce",
+      "path": "C:\\Users\\ascen\\Documents\\GitHub\\agentic-commerce",
       "description": "Verifies Circle's X-Circle-Signature / X-Circle-Key-Id headers. Used instead of ^authenticated on webhook routes, which have no user session.\n",
       "related": [
         "^authenticated"
@@ -73,6 +93,14 @@
     "^checkout-authorized": {
       "category": "gates",
       "id": "checkout-authorized"
+    },
+    "^agent-authorized": {
+      "category": "gates",
+      "id": "agent-authorized"
+    },
+    "^personhood-verified": {
+      "category": "gates",
+      "id": "personhood-verified"
     },
     "^webhook-signature-verified": {
       "category": "gates",
