@@ -1,7 +1,7 @@
 {
   "sessionId": "smtnu5x0e",
   "startTime": 1788579684446,
-  "lastActivity": 1788663846701,
+  "lastActivity": 1788663876307,
   "breadcrumbs": [
     {
       "timestamp": 1788579706115,
@@ -44,6 +44,12 @@
       "action": "tool-call",
       "tool": "paradigm_lore_record",
       "summary": "lore_record: Wired real World ID Selfie Check (VERIFICATION_MODE=world)"
+    },
+    {
+      "timestamp": 1788667171751,
+      "action": "tool-call",
+      "tool": "paradigm_lore_record",
+      "summary": "lore_record: World ID live test: Selfie Check access-gated; fixed action "
     }
   ],
   "symbolsModified": [],

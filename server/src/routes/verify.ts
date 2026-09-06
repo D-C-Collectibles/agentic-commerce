@@ -131,7 +131,7 @@ verifyRouter.get(
       res.json({ status: session.status, usable: false });
       return;
     }
-    res.json({ status: "pending", usable: true, ...buildVerificationContext(req.params.sessionId) });
+    res.json({ status: "pending", usable: true, ...buildVerificationContext() });
   }),
 );
 

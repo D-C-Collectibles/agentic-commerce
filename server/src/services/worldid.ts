@@ -43,10 +43,12 @@ function worldConfig(): WorldConfig {
   return { appId, rpId, signingKey };
 }
 
-// The World ID action binds a proof to this specific purchase, so a proof from one
-// session can't authorize another. Backend and SPA must use the same action string.
-export function verificationAction(sessionId: string): string {
-  return `agentic-purchase:${sessionId}`;
+// One fixed World ID action for all agent purchases (register it in the Developer
+// Portal's Actions section). Each individual purchase is bound per-request via the SPA's
+// `signal` (the session id), not by a new action — so we don't create unbounded actions.
+// Backend RP signature and the SPA widget must use the same action string.
+export function verificationAction(): string {
+  return process.env.WORLD_ACTION ?? "agentic-commerce-purchase";
 }
 
 // Mirrors IDKit's RpContext ({ rp_id, nonce, created_at, expires_at, signature }).
@@ -66,15 +68,18 @@ export interface VerificationContext {
   rpContext?: RpContext;
 }
 
-// What the SPA needs to render the Selfie Check widget for a session. In mock mode it
-// carries no World config (the SPA shows the mock confirm instead).
-export function buildVerificationContext(sessionId: string): VerificationContext {
+// What the SPA needs to render the Selfie Check widget. In mock mode it carries no World
+// config (the SPA shows the mock confirm instead). The specific purchase is bound by the
+// SPA passing the session id as the widget `signal`.
+export function buildVerificationContext(): VerificationContext {
   if (verificationMode() === VERIFICATION_MODE.mock) {
     return { mode: VERIFICATION_MODE.mock, credential: WORLD_CREDENTIAL };
   }
   const { appId, rpId, signingKey } = worldConfig();
-  const action = verificationAction(sessionId);
-  const signature = signRequest({ signingKeyHex: signingKey, action });
+  const action = verificationAction();
+  // signRequest wants bare hex; tolerate a 0x prefix / surrounding whitespace from the portal.
+  const signingKeyHex = signingKey.trim().replace(/^0x/i, "");
+  const signature = signRequest({ signingKeyHex, action });
   return {
     mode: VERIFICATION_MODE.world,
     credential: WORLD_CREDENTIAL,

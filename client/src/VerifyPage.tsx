@@ -65,7 +65,10 @@ export function VerifyPage({ sessionId }: { sessionId: string }) {
               preset={selfieCheckLegacy({ signal: sessionId })}
               handleVerify={handleVerify}
               onSuccess={() => setPhase("done")}
-              onError={(code) => setError(`Verification failed (${code}). Please try again.`)}
+              onError={(code, debugReport) => {
+                console.error("[verify] IDKit error:", code, debugReport);
+                setError(`Verification failed — error code: ${code}`);
+              }}
             />
           </>
         )}
