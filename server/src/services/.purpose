@@ -46,8 +46,19 @@ verification:
   description: >
     The ^personhood-verified gate for agent-initiated purchases. Creates single-use,
     order-bound, short-TTL (5 min) verification sessions and marks them verified via an
-    atomic UPDATE so a purchase settles exactly once. This is where World ID Selfie
-    Check (Face Auth) plugs in — markSessionVerified is called only after a valid proof
-    (mocked today by #verify-route). Read lazily; references orders(id).
+    atomic UPDATE so a purchase settles exactly once. markSessionVerified is called only
+    after a valid proof (mock click-through, or a real World ID proof — see #worldid-service).
+    Read lazily; references orders(id).
   gates: [^personhood-verified]
   new_tables: [verification_sessions]
+
+worldid:
+  symbol: "#worldid-service"
+  description: >
+    Real World ID Selfie Check integration behind VERIFICATION_MODE (mock default, world
+    opt-in). In world mode: signs RP requests with the secret WORLD_RP_SIGNING_KEY
+    (@worldcoin/idkit-core signRequest) to build the RpContext the SPA's IDKit widget
+    needs (credential "selfie"), binding each proof to a per-session action; and verifies
+    returned proofs via POST developer.world.org/api/v4/verify/{rp_id}. app_id/rp_id are
+    public; the signing key is secret and never sent to the client.
+  gates: [^personhood-verified]

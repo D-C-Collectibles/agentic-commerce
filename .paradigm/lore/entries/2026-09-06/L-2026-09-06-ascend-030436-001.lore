@@ -1,0 +1,65 @@
+id: L-2026-09-06-ascend-030436-001
+type: agent-session
+timestamp: '2026-09-06T03:04:36.159Z'
+author: ascend
+agent:
+  provider: anthropic
+  model: claude-opus-4-6
+title: Wired real World ID Selfie Check (VERIFICATION_MODE=world)
+summary: 'Integrated the real World ID Selfie Check behind VERIFICATION_MODE (mock stays default). Server #worldid-service signs RP requests with @worldcoin/idkit-core signRequest (credential ''selfie'', per-session action binding) and verifies proofs at developer.world.org/api/v4/verify/{rp_id}. #verify-route gained GET /verify-context/:sessionId (RP signature for the SPA) and POST /verify/:sessionId (proof verify + settle); the mock GET is disabled in world mode to prevent bypass. SPA gained a /verify/:sessionId route rendering the @worldcoin/idkit IDKitRequestWidget with selfieCheckLegacy. All type-checks/builds pass; mock flow regression-clean; signRequest validated. World round-trip untested pending real creds + a World App selfie.'
+symbols_touched:
+  - '#verify-route'
+  - '#agent-route'
+  - '#verification-service'
+  - ^personhood-verified
+symbols_created:
+  - '#worldid-service'
+  - '#storefront-verify-page'
+files_created:
+  - server/src/services/worldid.ts
+  - client/src/VerifyPage.tsx
+files_modified:
+  - server/src/routes/verify.ts
+  - server/src/routes/agent.ts
+  - server/src/services/verification.ts
+  - server/.env.example
+  - server/package.json
+  - client/src/api.ts
+  - client/src/main.tsx
+  - client/src/styles.css
+  - client/package.json
+  - server/src/routes/.purpose
+  - server/src/services/.purpose
+  - portal.yaml
+  - CLAUDE.md
+learnings:
+  - 'World ID v4 exact API: signRequest({signingKeyHex, action, ttl}) from @worldcoin/idkit-core/signing (re-exports @worldcoin/idkit-server) returns {sig,nonce,createdAt,expiresAt}; map to RpContext {rp_id,nonce,created_at,expires_at,signature}. Selfie Check credential id is ''selfie''; React preset is selfieCheckLegacy({signal}) from @worldcoin/idkit; verify is POST developer.world.org/api/v4/verify/{rp_id} with the proof forwarded verbatim (no API key).'
+  - 'Needs THREE creds, not two: WORLD_APP_ID + WORLD_RP_ID (public) and WORLD_RP_SIGNING_KEY (SECRET, server-only). action binds a proof to a session (agentic-purchase:<sessionId>) and must match between backend signRequest and the widget''s action prop.'
+  - 'Security: the mock GET /verify page is disabled (409) in world mode so it can''t settle without a real proof. Cross-session proof replay is a remaining hardening TODO (verify the proof''s action/nullifier matches the target session).'
+  - '@worldcoin/idkit bundles an ~870kB WASM (proof handling) — Vite bundles it fine as an asset. signRequest itself is pure JS (no WASM).'
+  - 'Open items to confirm at world-mode test time: IDKit `environment` (staging vs production, tied to the World app) is currently omitted (defaults); may need setting. World verify response is currently treated as ok/not-ok on HTTP status only.'
+verification:
+  status: partial
+  details:
+    server_typecheck: pass
+    client_typecheck: pass
+    client_build: pass (idkit wasm bundled)
+    mock_flow_regression: pass (verify-context mock, mock GET settles, POST 409-guarded)
+    signRequest: pass (65-byte sig, 32-byte nonce, 300s ttl)
+    world_roundtrip: untested (needs real WORLD_* creds + World App selfie)
+tags:
+  - build
+  - world-id
+  - selfie-check
+  - idkit
+  - personhood
+  - agentic-commerce
+body: 'Design: VERIFICATION_MODE=mock|world mirrors PAYMENTS_MODE. In world mode the agent''s verification URL points at the SPA (APP_BASE_URL, default :5173) instead of the API; the SPA fetches /verify-context, renders the IDKit Selfie Check widget, and POSTs the proof back to the API which verifies with World then settles via the shared settleVerifiedSession helper. To go live: add WORLD_APP_ID/WORLD_RP_ID/WORLD_RP_SIGNING_KEY to server/.env, set VERIFICATION_MODE=world, restart the server (dotenv loads at boot), keep the client running, then run an agent purchase and complete the selfie in World App. Next: PR this on a fresh branch off main; later hardening = replay protection, environment prop, richer verify-response handling; then real Circle, Chrome-extension surface, MCP generalization, UX polish.'
+linked_lore:
+  - L-2026-09-06-ascend-020520-001
+  - L-2026-09-06-ascend-013959-001
+confidence: 0.78
+git_context:
+  ref: 66bd7262fd2ab03258486f4f99d75c8cbb6ff979
+  branch: feat/storefront-and-auth
+  dirty: true

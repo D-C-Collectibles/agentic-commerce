@@ -45,6 +45,10 @@ routes:
   GET /agent/purchase/:orderId:
     gates: [^agent-authorized]  # poll outcome; scoped to the grant's own user
   GET /verify/:sessionId:
-    gates: [^personhood-verified]  # human-facing selfie checkpoint (#verify-route); completing it satisfies the gate
+    gates: [^personhood-verified]  # mock selfie checkpoint (#verify-route); disabled in world mode
+  GET /verify-context/:sessionId:
+    gates: []  # public — RP signature + config for the SPA to render the World ID widget (session id is the capability)
+  POST /verify/:sessionId:
+    gates: [^personhood-verified]  # world mode — verifies the World ID proof (#worldid-service) then settles
   POST /webhooks/circle:
     gates: [^webhook-signature-verified]

@@ -38,10 +38,15 @@ does a real Arc-testnet USDC transfer):
   428 confirm above the auto-approve threshold (^checkout-authorized), then an immediate charge.
 - **Agent**: `POST /agent/grant` (mints an agent grant), `POST /agent/checkout` (initiates but does
   NOT charge — returns a `verification_required` handoff), `GET /agent/purchase/:orderId` (poll).
-  An agent-initiated purchase is gated by ^personhood-verified: a World ID Selfie Check the human
-  completes at `GET /verify/:sessionId` (#verify-route, currently mocked in #verification-service)
-  before any money moves. The user/agent split is enforced by the JWT audience, so an agent can't
-  take the ungated human path.
+  An agent-initiated purchase is gated by ^personhood-verified: a **World ID Selfie Check** the
+  human completes before any money moves. The user/agent split is enforced by the JWT audience, so
+  an agent can't take the ungated human path.
+
+`VERIFICATION_MODE` (#worldid-service) toggles that check: `mock` (default) is a click-through page
+at `GET /verify/:sessionId`; `world` uses the real World ID Selfie Check — the server signs an RP
+request with the secret `WORLD_RP_SIGNING_KEY` (public `WORLD_APP_ID`/`WORLD_RP_ID`), the SPA
+renders the IDKit widget at `/verify/:sessionId` (reading `GET /verify-context/:sessionId`), and the
+proof is verified via `POST /verify/:sessionId` → World's `/api/v4/verify` before settling.
 
 ## Frontend
 

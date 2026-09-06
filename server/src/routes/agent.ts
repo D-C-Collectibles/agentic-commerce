@@ -28,13 +28,20 @@ import {
   VERIFICATION_STATUS,
   type VerificationSession,
 } from "../services/verification.js";
+import { VERIFICATION_MODE, verificationMode } from "../services/worldid.js";
 
 export const agentRouter = Router();
 
-// Public base URL used to build the human-facing verification link. Configurable so a
-// tunnel (e.g. ngrok) can be used when the human is on a different device/network.
-function verificationBaseUrl(): string {
-  return process.env.PUBLIC_BASE_URL ?? `http://127.0.0.1:${process.env.PORT ?? 3000}`;
+// The human-facing verification link. In world mode it points at the SPA (which renders
+// the World ID Selfie Check widget); in mock mode at the server's own click-through page.
+// Both are configurable so a tunnel (e.g. ngrok) works when the human is on another device.
+function verificationUrl(sessionId: string): string {
+  if (verificationMode() === VERIFICATION_MODE.world) {
+    const appBase = process.env.APP_BASE_URL ?? "http://127.0.0.1:5173";
+    return `${appBase}/verify/${sessionId}`;
+  }
+  const apiBase = process.env.PUBLIC_BASE_URL ?? `http://127.0.0.1:${process.env.PORT ?? 3000}`;
+  return `${apiBase}/verify/${sessionId}`;
 }
 
 // Agent-facing purchase status, derived from the order + its verification session.
@@ -133,7 +140,7 @@ agentRouter.post(
       amountUsdc: amountUsdc.toFixed(2),
       verification: {
         sessionId,
-        url: `${verificationBaseUrl()}/verify/${sessionId}`,
+        url: verificationUrl(sessionId),
         instructions:
           "A human must complete the World ID Selfie Check at this URL to authorize the purchase.",
       },
