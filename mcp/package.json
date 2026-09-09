@@ -1,0 +1,27 @@
+{
+  "name": "@agentic-commerce/merchant-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Merchant MCP — lets an AI agent browse an agentic-commerce storefront and initiate purchases on the user's behalf, gated by a World ID personhood (selfie) check.",
+  "bin": {
+    "merchant-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

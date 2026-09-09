@@ -8,13 +8,21 @@ import { randomUUID } from "node:crypto";
 import { initiateDeveloperControlledWalletsClient } from "@circle-fin/developer-controlled-wallets";
 import { pool } from "../db.js";
 
-const apiKey = process.env.CIRCLE_API_KEY;
-const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
-if (!apiKey || !entitySecret) {
-  throw new Error("CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET are required (see server/.env.example)");
+// Init the Circle client lazily (on first transfer) rather than at import, so the
+// server still boots to serve /products and /auth when Circle creds aren't set —
+// only the checkout path requires them.
+let circleClient: ReturnType<typeof initiateDeveloperControlledWalletsClient> | null = null;
+function circle(): ReturnType<typeof initiateDeveloperControlledWalletsClient> {
+  if (!circleClient) {
+    const apiKey = process.env.CIRCLE_API_KEY;
+    const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
+    if (!apiKey || !entitySecret) {
+      throw new Error("CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET are required (see server/.env.example)");
+    }
+    circleClient = initiateDeveloperControlledWalletsClient({ apiKey, entitySecret });
+  }
+  return circleClient;
 }
-
-const circle = initiateDeveloperControlledWalletsClient({ apiKey, entitySecret });
 
 // ponytail: testnet only. Revisit before any mainnet rollout (see .paradigm/specs/wallet-checkout.md).
 const BLOCKCHAIN = "ARC-TESTNET";
@@ -56,7 +64,7 @@ async function getOrCreateWalletSetId(): Promise<string> {
   );
   if (rows[0]) return rows[0].circle_wallet_set_id;
 
-  const res = await circle.createWalletSet({ name: "agentic-commerce", idempotencyKey: randomUUID() });
+  const res = await circle().createWalletSet({ name: "agentic-commerce", idempotencyKey: randomUUID() });
   const walletSetId = res.data?.walletSet?.id;
   if (!walletSetId) throw new Error("Circle did not return a wallet set id");
 
@@ -77,7 +85,7 @@ export async function getOrCreateUserWallet(userId: string): Promise<{ address: 
   if (existing.rows[0]) return { address: existing.rows[0].address };
 
   const walletSetId = await getOrCreateWalletSetId();
-  const res = await circle.createWallets({
+  const res = await circle().createWallets({
     accountType: "EOA",
     blockchains: [BLOCKCHAIN],
     count: 1,
@@ -95,7 +103,7 @@ export async function getOrCreateUserWallet(userId: string): Promise<{ address: 
 }
 
 async function getUsdcTokenAddress(walletId: string): Promise<string> {
-  const res = await circle.getWalletTokenBalance({ id: walletId });
+  const res = await circle().getWalletTokenBalance({ id: walletId });
   const usdc = (res.data?.tokenBalances ?? []).find((b) => b.token?.symbol === "USDC");
   return usdc?.token?.tokenAddress ?? ARC_TESTNET_USDC_FALLBACK;
 }
@@ -112,7 +120,7 @@ export async function transferUsdc(req: WalletTransferRequest): Promise<WalletTr
 
   const tokenAddress = await getUsdcTokenAddress(walletId);
 
-  const res = await circle.createTransaction({
+  const res = await circle().createTransaction({
     walletId,
     tokenAddress,
     destinationAddress: req.destinationAddress,
@@ -128,7 +136,7 @@ export async function transferUsdc(req: WalletTransferRequest): Promise<WalletTr
 }
 
 export async function getTransactionState(circleTransactionId: string): Promise<WalletTransferResult["state"]> {
-  const res = await circle.getTransaction({ id: circleTransactionId });
+  const res = await circle().getTransaction({ id: circleTransactionId });
   const state = res.data?.transaction?.state;
   if (!state) throw new Error(`Circle returned no state for transaction ${circleTransactionId}`);
   return state as WalletTransferResult["state"];

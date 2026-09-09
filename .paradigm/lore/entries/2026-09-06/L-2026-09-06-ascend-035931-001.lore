@@ -1,0 +1,46 @@
+id: L-2026-09-06-ascend-035931-001
+type: agent-session
+timestamp: '2026-09-06T03:59:31.756Z'
+author: ascend
+agent:
+  provider: anthropic
+  model: claude-opus-4-6
+title: 'World ID live test: Selfie Check access-gated; fixed action + key normalization'
+summary: 'Live-tested VERIFICATION_MODE=world with the user''s real World ID creds. The RP signing key was initially the wrong value (122-char base64 / 91 bytes); once the correct 32-byte hex private key was set, signRequest + /verify-context produced a valid RP signature (app_1148..., rp_58b0...). The selfie itself fails with a generic client-side error because the World ID ''selfie'' credential is a gated beta the user has now requested access to. Refactored to the idiomatic World ID pattern: one fixed action (WORLD_ACTION, default agentic-commerce-purchase, now registered in the portal) bound per-purchase via the widget signal; added 0x/whitespace key normalization and clearer widget error surfacing.'
+symbols_touched:
+  - '#worldid-service'
+  - '#verify-route'
+  - '#storefront-verify-page'
+  - ^personhood-verified
+files_modified:
+  - server/src/services/worldid.ts
+  - server/src/routes/verify.ts
+  - server/.env.example
+  - client/src/VerifyPage.tsx
+learnings:
+  - 'World ID RP signing key must be a 32-byte hex string (64 hex chars, 0x optional). The Developer Portal issues a keypair; use the PRIVATE key. A wrong/base64 value throws ''Invalid signing key: contains non-hex characters'' in signRequest — the async error handler caught it as a clean 500 (no hang), validating that fix in the wild.'
+  - 'The ''selfie'' (Selfie Check) credential is a gated beta: request access for the app from the World team (docs point to developers@toolsforhumanity.com). Without access the IDKit widget fails client-side with a generic error before any proof reaches the backend (order stays pending_verification).'
+  - 'Idiomatic World ID: ONE fixed action per flow (register in the portal''s Actions section), bind the specific request via the preset `signal` (we use the session id) — not a new action per request. Refactored verificationAction() to a fixed WORLD_ACTION (default agentic-commerce-purchase).'
+  - app_id/rp_id are public and safe to log for debugging; the signing key is secret and is normalized (trim + strip 0x) before signRequest.
+verification:
+  status: partial
+  details:
+    server_typecheck: pass
+    client_typecheck: pass
+    world_verify_context: pass (mode=world, action=agentic-commerce-purchase, credential=selfie, valid 65-byte RP sig)
+    live_selfie: blocked (selfie credential access-gated; user requested access from World)
+tags:
+  - world-id
+  - selfie-check
+  - live-test
+  - access-gated
+  - idkit
+  - actions
+body: 'To finish going live once World grants Selfie Check access: keep VERIFICATION_MODE=world + the WORLD_* creds + WORLD_ACTION=agentic-commerce-purchase (action registered), restart the API, run an agent purchase, open the SPA verify URL, complete the selfie in World App. Remaining hardening (post-access): verify the returned proof''s signal matches the target session (cross-session replay), confirm IDKit `environment` (staging vs production) if the widget errors after access is granted, and richer handling of the World verify response. This work is on branch feat/world-id-selfie-check (PR #6).'
+linked_lore:
+  - L-2026-09-06-ascend-030436-001
+confidence: 0.8
+git_context:
+  ref: b2c1d5ed4d8621dc42ca84e79fe10a7f1ead49fd
+  branch: feat/world-id-selfie-check
+  dirty: true
