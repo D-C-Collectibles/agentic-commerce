@@ -4,11 +4,18 @@
 //   - world: the SPA renders the World ID Selfie Check widget, reads GET
 //            /verify-context/:sessionId for the RP signature, and POSTs the proof to
 //            POST /verify/:sessionId, which verifies it with World before settling.
-// Settlement is shared and single-use either way. Emits !personhood-verified, !purchase-completed.
+// Settlement is shared and single-use either way. For agent-initiated orders only, it
+// also enforces ^grant-scope-valid (#agent-grants-service) — the order's originating
+// grant's own scoped destination/per-tx/rolling caps and expiry/revocation — in
+// addition to, not instead of, #orders-service's app-wide spend caps. Human orders have
+// no agent_grant_id and are unaffected. Emits !personhood-verified, !purchase-completed.
 
 import { Router } from "express";
+import { log } from "@a-company/paradigm-logger";
 import { asyncHandler } from "../async-handler.js";
-import { getOrder, markOrderPaid } from "../services/orders.js";
+import { evaluateGrantScope, getAgentGrantById } from "../services/agent-grants.js";
+import { getEnrolledDevice, resolveLedgerGate } from "../services/ledger-confirm.js";
+import { getOrder, markOrderFailed, markOrderPaid, ORDER_STATUS } from "../services/orders.js";
 import { executePayment } from "../services/payment.js";
 import { getSession, getSessionForContext, markSessionVerified } from "../services/verification.js";
 import {
@@ -20,25 +27,96 @@ import {
 
 export const verifyRouter = Router();
 
-type SettleOutcome = "verified" | "already" | "expired" | "not_found" | "order_missing";
+type SettleOutcome =
+  | "verified"
+  | "already"
+  | "expired"
+  | "not_found"
+  | "order_missing"
+  | "payment_failed"
+  | "grant_denied"
+  | "pending_ledger_confirmation"
+  | "ledger_denied";
 
-// Marks the session verified (atomically, so this runs once) and settles the order via
-// #payment-service. Shared by the mock GET and the world POST so both charge exactly once.
+// Marks the session verified (atomically, so the PERSONHOOD step runs once) and settles
+// the order via #payment-service. Shared by the mock GET and the world POST so both
+// charge exactly once. Once the session is verified, this may still be called again for
+// the same sessionId (the human re-visiting the same link, or a caller retrying) — that
+// retry is what lets a ^ledger-confirmed order that was still pending on its first
+// settlement attempt get charged once the approval lands, without re-running personhood.
 async function settleVerifiedSession(sessionId: string): Promise<SettleOutcome> {
   const result = await markSessionVerified(sessionId);
-  if (result.outcome !== "verified") return result.outcome;
+  if (result.outcome === "not_found" || result.outcome === "expired") return result.outcome;
 
   const session = result.session!;
   const order = await getOrder(session.order_id);
   if (!order) return "order_missing";
 
-  const payment = await executePayment({
-    userId: session.user_id,
-    destinationAddress: order.destination_address,
-    amountUsdc: Number(order.amount_usdc),
-    idempotencyKey: order.idempotency_key,
-  });
-  await markOrderPaid(order.id, payment.transactionId, payment.orderStatus);
+  if (order.status !== ORDER_STATUS.pending) {
+    // Already settled (or already failed/denied) by an earlier call for this same
+    // session/order — report that outcome again instead of re-running the grant/ledger
+    // checks or attempting a second payment.
+    if (order.status === ORDER_STATUS.failed || order.status === ORDER_STATUS.denied) return "payment_failed";
+    return "already";
+  }
+
+  // ^grant-scope-valid: the app-level "session key" check. Only applies to
+  // agent-initiated orders (agent_grant_id set); human orders skip this entirely. Runs
+  // here — at the moment of charging, not just at /agent/checkout initiation — so a
+  // grant revoked while the human was completing the selfie check still blocks money
+  // from moving. Denial marks the order failed rather than leaving it pending, the same
+  // as a payment-execution failure below.
+  if (order.agent_grant_id) {
+    const grant = await getAgentGrantById(order.agent_grant_id);
+    const scope = grant
+      ? await evaluateGrantScope(grant, order)
+      : { ok: false as const, reason: "grant_not_found" as const };
+    if (!scope.ok) {
+      await markOrderFailed(order.id, `grant_scope_denied:${scope.reason}`);
+      log.component("#verify-route").error("Agent purchase rejected: grant scope check failed", {
+        orderId: order.id,
+        reason: scope.reason,
+      });
+      return "grant_denied";
+    }
+  }
+
+  // ^ledger-confirmed: runs ALONGSIDE ^grant-scope-valid and personhood verification —
+  // all must pass before executePayment() is ever called. Only applies to orders whose
+  // user has an enrolled Ledger device (#ledger-confirm-service); everyone else is
+  // unaffected. A still-pending approval surfaces "pending_ledger_confirmation" the same
+  // way an unverified session surfaces "pending_verification" elsewhere (#agent-route) —
+  // the order stays 'pending' and this same link can be revisited once the human
+  // approves on their device. A denied/timed-out approval fails the order outright.
+  const ledgerDevice = await getEnrolledDevice(session.user_id);
+  if (ledgerDevice) {
+    const gate = await resolveLedgerGate(order);
+    if (gate.status === "denied") {
+      await markOrderFailed(order.id, "ledger_confirmation_denied");
+      log.component("#verify-route").error("Agent purchase rejected: Ledger confirmation denied", {
+        orderId: order.id,
+      });
+      return "ledger_denied";
+    }
+    if (gate.status !== "approved") {
+      return "pending_ledger_confirmation";
+    }
+  }
+
+  try {
+    const payment = await executePayment({ order });
+    await markOrderPaid(order.id, payment.transactionId, payment.orderStatus);
+  } catch (error) {
+    // Same hardening as #checkout-route: don't leave the order stuck 'pending' (eating
+    // the daily cap + wedging its idempotency key) if executePayment()/transferUsdc()
+    // or the markOrderPaid() write throws.
+    await markOrderFailed(order.id, (error as Error).message);
+    log.component("#verify-route").error("Agent purchase payment failed, order marked failed", {
+      orderId: order.id,
+      error: (error as Error).message,
+    });
+    return "payment_failed";
+  }
   return "verified";
 }
 
@@ -97,6 +175,52 @@ verifyRouter.get(
         .status(410)
         .type("html")
         .send(page("Link expired", "<p>This verification link has expired. Ask your agent to start the purchase again.</p>", "#b00"));
+      return;
+    }
+    if (outcome === "payment_failed") {
+      res
+        .status(502)
+        .type("html")
+        .send(page("Payment failed", "<p>Your identity was verified, but the payment could not be completed. Ask your agent to try again.</p>", "#b00"));
+      return;
+    }
+    if (outcome === "grant_denied") {
+      res
+        .status(403)
+        .type("html")
+        .send(
+          page(
+            "Purchase not authorized",
+            "<p>This purchase falls outside the agent grant that started it (revoked, expired, or out of scope). Ask your agent to mint a new grant and try again.</p>",
+            "#b00",
+          ),
+        );
+      return;
+    }
+    if (outcome === "ledger_denied") {
+      res
+        .status(403)
+        .type("html")
+        .send(
+          page(
+            "Purchase not authorized",
+            "<p>The Ledger confirmation for this purchase was denied or timed out. Ask your agent to try again.</p>",
+            "#b00",
+          ),
+        );
+      return;
+    }
+    if (outcome === "pending_ledger_confirmation") {
+      res
+        .status(202)
+        .type("html")
+        .send(
+          page(
+            "Waiting for Ledger confirmation",
+            "<p>Your identity is verified. Approve this purchase on your enrolled Ledger device, then revisit this page.</p>",
+            "#b58a00",
+          ),
+        );
       return;
     }
     if (outcome === "already") {
@@ -158,6 +282,22 @@ verifyRouter.post(
     }
     if (outcome === "expired") {
       res.status(410).json({ error: "session_expired" });
+      return;
+    }
+    if (outcome === "payment_failed") {
+      res.status(502).json({ error: "payment_failed" });
+      return;
+    }
+    if (outcome === "grant_denied") {
+      res.status(403).json({ error: "grant_scope_denied" });
+      return;
+    }
+    if (outcome === "ledger_denied") {
+      res.status(403).json({ error: "ledger_confirmation_denied" });
+      return;
+    }
+    if (outcome === "pending_ledger_confirmation") {
+      res.status(202).json({ status: "pending_ledger_confirmation" });
       return;
     }
     // "verified" or "already" — the purchase is settled.

@@ -1,0 +1,21 @@
+secrets:
+  symbol: "#secrets-service"
+  description: >
+    Seam for secret retrieval (getSecret/requireSecret/getShardedSecret), backing
+    #wallet-service, #auth-service, and #worldid-service. getShardedSecret(base,
+    shardId) reads `${base}_${shardId}` (e.g. CIRCLE_API_KEY_2) and falls back to the
+    plain `base` secret when no shard-specific one is set — used by #wallet-service so
+    each wallet shard can eventually get its own scoped Circle credential without
+    breaking single-key setups. `SECRETS_BACKEND` (env, default "env") selects the
+    backing store: "env" reads plain process.env (unchanged, still not a real AWS/GCP
+    Secrets Manager or Vault integration); "ledger-ring" shells out to Ledger's
+    `wallet-cli ring decrypt --key <name>` (node:child_process, no device present, only
+    network access to restore the trustchain) to retrieve a value that was encrypted at
+    rest via a one-time, device-present `wallet-cli ring init` / `ring encrypt` ops
+    step — decrypted values are cached in-memory per key per process (same lazy-cache
+    pattern as the rest of this file), and any failure (CLI not installed, key missing
+    from the ring, non-zero exit, empty output) throws an error naming only the secret
+    *name* and a static hint — never the raw stdout/stderr, which could contain partial
+    decrypted output or ring diagnostics. See .paradigm/specs/wallet-checkout.md
+    "Secrets backend" for the design and the manual device-present provisioning steps
+    that can't be scripted, and "Hardening" for the original secrets-manager-ready seam.

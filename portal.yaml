@@ -11,6 +11,13 @@ gates:
       Per-user spending-policy check (per-tx/daily USDC caps) plus an explicit
       !checkout-confirmed signal from the user for amounts above the auto-approve
       threshold. Runs after ^authenticated, before any wallet transfer is submitted.
+      The cap check and the order insert run inside one Postgres transaction holding a
+      per-user advisory lock (#orders-service.reserveOrder), so two concurrent requests
+      near the cap can't both pass the check before either commits. The same call also
+      dedups client resubmissions (a client-supplied idempotency token, or a short
+      window keyed on user+sku+quantity+amount) so a double-click/retry can't create a
+      second order or a second real Circle transfer, and runs the (currently no-op)
+      Circle Policy Engine hook — see .paradigm/specs/wallet-checkout.md "Hardening".
   ^agent-authorized:
     description: >
       Valid agent grant required. A signed JWT with audience "agent" (Authorization:
@@ -29,6 +36,37 @@ gates:
     description: >
       Verifies Circle's X-Circle-Signature / X-Circle-Key-Id headers. Used instead of
       ^authenticated on webhook routes, which have no user session.
+  ^grant-scope-valid:
+    description: >
+      App-level "session key" check for agent-initiated orders only (#agent-grants-service).
+      At settlement (#verify-route's settleVerifiedSession, right before executePayment())
+      the order's originating grant is re-checked: not revoked, not past its own
+      (shorter-than-the-JWT) expiry, destination matches merchantPayoutAddress(), and the
+      amount is within that grant's per-tx cap and rolling-24h cap — in addition to, not
+      instead of, ^checkout-authorized's app-wide caps. #agent-route also does an early,
+      best-effort version of the revoked/expired check at POST /agent/checkout so a
+      doomed order isn't reserved, but the settlement-time check is authoritative since a
+      grant can be revoked in between. Human orders have no agent grant and are
+      unaffected. This is deliberately NOT an on-chain session key — see
+      .paradigm/specs/wallet-checkout.md "Session-scoped agent grants" for the deferred
+      on-chain (ERC-4337 + Smart Contract Account) follow-up.
+  ^ledger-confirmed:
+    description: >
+      For a user with an enrolled Ledger device only (#ledger-confirm-service) — everyone
+      else is unaffected. A physical Ledger signs an EIP-712 typed-data struct over
+      {orderId, sku, quantity, amountUsdc, destinationAddress, nonce, expiresAt, chainId}
+      binding the approval to the specific STORED order row; verification always
+      reconstructs the hash server-side from that row, never from caller-echoed fields,
+      and resolves the approval (and consumes its nonce) atomically with checking it, so
+      a resubmission of the same order's idempotency key reuses one approval rather than
+      requiring a second. Fails closed: denial/expiry/replay marks the order
+      failed/denied, never left 'pending'. For a human checkout above the $10
+      auto-approve threshold this REPLACES the spoofable checkoutConfirmed boolean; for
+      an agent-initiated purchase it runs alongside (not instead of) ^personhood-verified
+      and ^grant-scope-valid at settlement. LEDGER_CONFIRM_MODE=mock (default) is a
+      click-through stand-in for demoing without hardware; a real device plus the
+      companion approver process is a follow-up — see
+      .paradigm/specs/wallet-checkout.md "Ledger confirmation gate".
 routes:
   GET /products:
     gates: []  # public catalog read (#products-route)
@@ -37,18 +75,30 @@ routes:
   POST /auth/login:
     gates: []  # public — mints the ^authenticated token (#auth-route)
   POST /checkout:
-    gates: [^authenticated, ^checkout-authorized]
+    gates: [^authenticated, ^checkout-authorized]  # + ^ledger-confirmed above the auto-approve threshold, only for users with an enrolled Ledger device (#ledger-confirm-service)
   POST /agent/grant:
-    gates: [^authenticated]  # human authorizes an agent; mints the ^agent-authorized grant (#agent-route)
+    gates: [^authenticated]  # human authorizes an agent; mints the ^agent-authorized grant + its scoped policy (#agent-route, #agent-grants-service)
+  POST /agent/grant/:grantId/revoke:
+    gates: [^authenticated]  # human revokes their own grant's scope early (#agent-route, #agent-grants-service)
   POST /agent/checkout:
-    gates: [^agent-authorized, ^checkout-authorized]  # initiates; charge waits for ^personhood-verified
+    gates: [^agent-authorized, ^checkout-authorized]  # initiates; charge waits for ^personhood-verified (and, for agent orders, ^grant-scope-valid)
   GET /agent/purchase/:orderId:
     gates: [^agent-authorized]  # poll outcome; scoped to the grant's own user
+  GET /ledger/enroll-nonce:
+    gates: [^authenticated]  # issue a one-time nonce to sign for device enrollment (#ledger-route)
+  POST /ledger/enroll:
+    gates: [^authenticated]  # bind a signerAddress to the caller, proven by a signature over that nonce (#ledger-route)
+  GET /ledger/pending-approvals:
+    gates: [^authenticated]  # the caller's own pending, unexpired approvals (#ledger-route); scoped to the caller's user id in the query, not just the token audience
+  POST /ledger/approvals/:approvalId:
+    gates: [^authenticated]  # submit a device signature; 404s (not 403s) on an approval owned by someone else, so ownership can't be probed (#ledger-route)
+  GET /ledger/mock/:approvalId:
+    gates: []  # LEDGER_CONFIRM_MODE=mock only (409 otherwise) — click-through auto-approve, no signature/session required, mirrors the mock personhood page (#ledger-route)
   GET /verify/:sessionId:
-    gates: [^personhood-verified]  # mock selfie checkpoint (#verify-route); disabled in world mode
+    gates: [^personhood-verified, ^grant-scope-valid]  # mock selfie checkpoint (#verify-route); disabled in world mode; settlement also checks ^ledger-confirmed for enrolled-device users
   GET /verify-context/:sessionId:
     gates: []  # public — RP signature + config for the SPA to render the World ID widget (session id is the capability)
   POST /verify/:sessionId:
-    gates: [^personhood-verified]  # world mode — verifies the World ID proof (#worldid-service) then settles
+    gates: [^personhood-verified, ^grant-scope-valid]  # world mode — verifies the World ID proof (#worldid-service) then settles
   POST /webhooks/circle:
     gates: [^webhook-signature-verified]

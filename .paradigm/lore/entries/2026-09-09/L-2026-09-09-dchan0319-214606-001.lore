@@ -1,0 +1,43 @@
+id: L-2026-09-09-dchan0319-214606-001
+type: agent-session
+timestamp: '2026-09-09T21:46:06.444Z'
+author: dchan0319
+agent:
+  provider: anthropic
+  model: claude-opus-4-6
+title: Wallet custody hardening — Stage 1 (idempotency, spend-cap race, secrets seam)
+summary: 'Orchestrated architect + security review of the per-user auto-created Circle wallet custody model, then had a builder agent implement Stage 1 hardening: checkout idempotency/dedup fix, a Postgres-locked fix for the spend-cap TOCTOU race, a getSecret() indirection seam for future secrets-manager migration, and a Circle Policy Engine hook stub, plus updated wallet-checkout.md and .purpose files. Stages 2 (sharded wallet sets) and 3 (SCA/on-chain session keys) are queued next; Stage 4 (Circle User-Controlled Wallets) is paused pending a product decision on how it should interact with the headless agent-checkout path.'
+symbols_touched:
+  - '#wallet-service'
+  - '#orders-service'
+  - '#payment-service'
+  - ^checkout-authorized
+  - ^agent-authorized
+files_created:
+  - server/src/services/orders.test.ts
+  - server/src/config/
+files_modified:
+  - server/src/services/orders.ts
+  - server/src/services/wallet.ts
+  - server/src/routes/checkout.ts
+  - server/src/routes/agent.ts
+  - server/src/services/auth.ts
+  - server/src/services/worldid.ts
+  - server/tsconfig.json
+  - server/package.json
+  - portal.yaml
+  - .paradigm/specs/wallet-checkout.md
+  - server/src/routes/.purpose
+  - server/src/services/.purpose
+decisions:
+  - id: D-uc-wallets-deferred
+    decision: Deferred Circle User-Controlled Wallets (Stage 4) implementation pending user decision on agent-path handling
+    rationale: UC wallets require a live per-transaction unlock, which conflicts with the stated no-wallet-connect-UI requirement and the headless agent-checkout flow; implementing it blind risks building the wrong thing
+verification:
+  status: pass
+  details:
+    tests: pass (orders.test.ts)
+git_context:
+  ref: fa31f517a48eb79849ef2c01c809be7c3d1698b3
+  branch: main
+  dirty: true

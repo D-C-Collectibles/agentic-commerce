@@ -6,6 +6,7 @@ import { pool } from "./db.js";
 import { agentRouter } from "./routes/agent.js";
 import { authRouter } from "./routes/auth.js";
 import { checkoutRouter } from "./routes/checkout.js";
+import { ledgerRouter } from "./routes/ledger.js";
 import { productsRouter } from "./routes/products.js";
 import { verifyRouter } from "./routes/verify.js";
 import { webhooksRouter } from "./routes/webhooks.js";
@@ -27,6 +28,7 @@ app.use(authRouter);
 app.use(productsRouter);
 app.use(checkoutRouter);
 app.use(agentRouter);
+app.use(ledgerRouter);
 app.use(verifyRouter);
 app.use(webhooksRouter);
 

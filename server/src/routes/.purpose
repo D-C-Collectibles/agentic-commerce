@@ -20,27 +20,53 @@ checkout:
   description: >
     The HUMAN (in-browser) leg of $checkout-flow. POST /checkout requires a user-audience
     JWT (^authenticated); an agent grant is rejected here so it can't bypass the selfie
-    path. Recomputes price server-side, enforces ^checkout-authorized (per-tx/daily caps
-    via #orders-service, plus a 428 confirmation_required above the $10 auto-approve
-    threshold), then charges immediately via #payment-service. Shares all order/spend
-    primitives with #agent-route through #orders-service. Full design in
+    path. Recomputes price server-side, enforces a 428 confirmation_required above the
+    $10 auto-approve threshold — UNLESS the user has an enrolled Ledger device
+    (#ledger-confirm-service), in which case ^ledger-confirmed REPLACES the spoofable
+    checkoutConfirmed boolean entirely: once the order is reserved,
+    resolveLedgerGate(order) must resolve to "approved" (428 ledger_confirmation_required
+    with an approvalId while pending, 403 ledger_confirmation_denied on denial/timeout —
+    never falls back to checkoutConfirmed for that user) before charging. Users with no
+    enrolled device keep today's checkoutConfirmed behavior unchanged. Reserves the order via
+    #orders-service.reserveOrder() — which dedups a resubmission (optional body
+    `idempotencyKey`, else a short window on user+sku+quantity+amount) and atomically
+    enforces ^checkout-authorized (per-tx/daily caps + the Circle Policy Engine hook)
+    before inserting — then charges via #payment-service only when a genuinely new
+    order was reserved; a deduped resubmission returns the existing order's state
+    without charging again. The executePayment()/markOrderPaid() call is wrapped in a
+    try/catch: any exception (Circle API error, network blip, missing token balance)
+    marks the order failed via #orders-service.markOrderFailed() and returns 502
+    payment_failed, instead of leaving the order stuck 'pending' (which would silently
+    eat into the user's daily spend cap and wedge its idempotency key). Shares all
+    order/spend primitives with #agent-route through #orders-service. Full design in
     .paradigm/specs/wallet-checkout.md.
-  gates: [^authenticated, ^checkout-authorized]
+  gates: [^authenticated, ^checkout-authorized, ^ledger-confirmed]
   signals: [!payment-submitted]
 
 agent:
   symbol: "#agent-route"
   description: >
     The agentic-commerce entry points, called by a merchant MCP holding an agent grant.
-    POST /agent/grant (^authenticated) mints the ^agent-authorized grant for a signed-in
-    human. POST /agent/checkout (^agent-authorized + ^checkout-authorized) validates and
-    reprices, applies spend caps, then creates a PENDING order + a verification session
-    and returns 202 verification_required with a human-facing selfie URL — it NEVER
-    charges. GET /agent/purchase/:orderId (^agent-authorized) polls the outcome, scoped
-    to the grant's own user. Implements $agent-purchase-flow; reuses #orders-service and
-    #payment-service so both checkout legs stay in lockstep.
+    POST /agent/grant (^authenticated) mints the ^agent-authorized grant AND, via
+    #agent-grants-service.recordAgentGrant(), a scoped "session key" spend-policy row
+    (destination = merchantPayoutAddress(), per-tx/rolling caps, its own TTL — shorter
+    than the grant JWT's own 365d lifetime) tied to the grant by its JWT `jti`. POST
+    /agent/grant/:grantId/revoke (^authenticated, owner-scoped) cuts a grant's scope off
+    early. POST /agent/checkout (^agent-authorized + ^checkout-authorized) validates and
+    reprices, rejects early (403) if the grant's scope is already revoked/expired, then
+    reserves the order via #orders-service.reserveOrder() — same dedup + atomic
+    spend-cap/Circle-policy check as #checkout-route, now also tagging the order with
+    its originating grant's scoped-policy id — and creates a PENDING order + a
+    verification session, returning 202 verification_required with a human-facing
+    selfie URL; it NEVER charges. A deduped resubmission (agent retry) reuses the
+    existing order and its still-usable verification session instead of minting a new
+    one. GET /agent/purchase/:orderId (^agent-authorized) polls the outcome, scoped to
+    the grant's own user. Implements $agent-purchase-flow; reuses #orders-service and
+    #payment-service so both checkout legs stay in lockstep. The grant-scope policy
+    itself is an app-level session key, not an on-chain one — see
+    .paradigm/specs/wallet-checkout.md "Session-scoped agent grants".
   gates: [^agent-authorized, ^checkout-authorized]
-  signals: [!agent-grant-issued, !agent-purchase-initiated]
+  signals: [!agent-grant-issued, !agent-grant-revoked, !agent-purchase-initiated]
 
 verify:
   symbol: "#verify-route"
@@ -52,9 +78,43 @@ verify:
     Selfie Check widget, reads GET /verify-context/:sessionId for the RP signature, and
     POSTs the proof to POST /verify/:sessionId, which verifies it with World before
     settling. Settlement is shared and single-use (via #verification-service +
-    #payment-service) either way.
-  gates: [^personhood-verified]
+    #payment-service) either way, in settleVerifiedSession() — which, for
+    agent-initiated orders only (order.agent_grant_id set), first re-checks
+    ^grant-scope-valid via #agent-grants-service.evaluateGrantScope() (destination,
+    per-tx/rolling caps, expiry, revocation) since the grant can be revoked in the
+    window between /agent/checkout and the human completing the selfie; a denial marks
+    the order failed and returns "grant_denied" (403 grant_scope_denied) without
+    charging. Human orders have no agent_grant_id and skip this entirely. It then checks
+    ^ledger-confirmed ALONGSIDE ^grant-scope-valid (not instead of it) — only for orders
+    whose user has an enrolled Ledger device (#ledger-confirm-service): a denied/timed-out
+    approval marks the order failed and returns "ledger_denied" (403); a still-pending
+    approval returns "pending_ledger_confirmation" (202) and leaves the order 'pending'
+    so the same verification link can be revisited once the human approves on their
+    device, without re-running personhood. It then wraps
+    executePayment()/markOrderPaid() in a try/catch the same way #checkout-route does:
+    any exception marks the order failed via #orders-service.markOrderFailed() and both
+    routes return a "payment_failed" outcome (502) instead of leaving the order stuck
+    'pending'.
+  gates: [^personhood-verified, ^grant-scope-valid, ^ledger-confirmed]
   signals: [!personhood-verified, !purchase-completed]
+
+ledger:
+  symbol: "#ledger-route"
+  description: >
+    Enrolls a human's Ledger device and lets it answer pending ^ledger-confirmed
+    approval requests raised by #checkout-route/#verify-route
+    (#ledger-confirm-service). GET /ledger/enroll-nonce issues a one-time nonce; POST
+    /ledger/enroll binds a signerAddress to the caller once they sign it. GET
+    /ledger/pending-approvals returns the caller's own pending, unexpired approvals
+    as typed-data payloads to sign. POST /ledger/approvals/:approvalId submits a
+    device signature, verified against the STORED order snapshot (never caller-echoed
+    fields) — 404 on an approval owned by someone else, so ownership can't be probed.
+    GET /ledger/mock/:approvalId is a LEDGER_CONFIRM_MODE=mock-only click-through
+    auto-approve for demoing without hardware (409 outside mock mode). All routes
+    except the mock one require the caller's own ^authenticated user token (never an
+    agent grant) — a human enrolls and answers approvals only for themselves.
+  gates: [^authenticated, ^ledger-confirmed]
+  signals: [!ledger-device-enrolled, !ledger-approval-verified]
 
 circle-webhook:
   symbol: "#circle-webhook-route"
