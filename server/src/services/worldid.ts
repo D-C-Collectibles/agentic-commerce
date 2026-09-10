@@ -5,6 +5,7 @@
 // Developer Portal. Swapped in behind a flag so the mock flow keeps working untouched.
 
 import { signRequest } from "@worldcoin/idkit-core/signing";
+import { getSecret, SECRET_NAMES } from "../config/secrets.js";
 
 export const VERIFICATION_MODE = {
   mock: "mock",
@@ -33,7 +34,7 @@ interface WorldConfig {
 function worldConfig(): WorldConfig {
   const appId = process.env.WORLD_APP_ID;
   const rpId = process.env.WORLD_RP_ID;
-  const signingKey = process.env.WORLD_RP_SIGNING_KEY;
+  const signingKey = getSecret(SECRET_NAMES.worldRpSigningKey);
   if (!appId || !rpId || !signingKey) {
     throw new Error(
       "WORLD_APP_ID, WORLD_RP_ID and WORLD_RP_SIGNING_KEY are required for " +

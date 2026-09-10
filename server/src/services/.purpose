@@ -2,34 +2,96 @@ wallet:
   symbol: "#wallet-service"
   description: >
     Wraps the Circle Developer-Controlled Wallets SDK. One wallet per user,
-    server-custodied. Entity secret read from env only, never exposed to callers.
-    All mutating calls use a UUID v4 idempotencyKey.
+    server-custodied. Entity secret/API key read via #secrets-service
+    (getSecret()/getShardedSecret()), never exposed to callers. All mutating calls use
+    a UUID v4 idempotencyKey. Users are deterministically partitioned across
+    SHARD_COUNT wallet shards (walletShardId() = sha256(userId) mod SHARD_COUNT, env,
+    default 1) — each shard gets its own Circle wallet set (wallet_sets, keyed by
+    shard; shard 0 reuses the pre-sharding 'default' row) and CAN have its own scoped
+    Circle credential (getShardedSecret() reads CIRCLE_API_KEY_<N>/
+    CIRCLE_ENTITY_SECRET_<N>, falling back to the single CIRCLE_API_KEY/
+    CIRCLE_ENTITY_SECRET), so a compromised key only exposes one shard's wallets.
+    SHARD_COUNT=1 (the default) reproduces pre-sharding behavior exactly. user_wallets
+    records each user's wallet_shard_id, and every wallet-creation/transfer/status call
+    resolves and uses that user's shard's Circle client. sweepShardBalances(shardId) is
+    a callable (not cron-wired — no cron infra in this repo) auto-sweep: moves any
+    wallet's USDC balance above SWEEP_THRESHOLD_USDC into TREASURY_ADDRESS, bounding a
+    compromised shard key's blast radius. Full design in
+    .paradigm/specs/wallet-checkout.md "Sharding". walletAccountType() (env
+    WALLET_ACCOUNT_TYPE, default "EOA") opts new wallets into Circle's "SCA" (Smart
+    Contract Account) accountType instead — a prerequisite for the on-chain
+    session-key follow-up described in "Session-scoped agent grants"; this flag alone
+    adds no on-chain policy.
+  new_tables: [wallet_sets, user_wallets]
+
+secrets:
+  symbol: "#secrets-service"
+  description: >
+    Seam for secret retrieval (getSecret/requireSecret/getShardedSecret in
+    config/secrets.ts), used by #wallet-service (CIRCLE_API_KEY, CIRCLE_ENTITY_SECRET,
+    and per-shard CIRCLE_API_KEY_<N>/CIRCLE_ENTITY_SECRET_<N> via getShardedSecret()),
+    #auth-service (JWT_SECRET), and #worldid-service (WORLD_RP_SIGNING_KEY) instead of
+    reading process.env directly at each call site. IMPORTANT: this is a seam only — it
+    still reads plain env vars under the hood; no AWS/GCP Secrets Manager or Vault SDK
+    is integrated. Swapping in a real secrets-manager backend later means changing this
+    one module, not every call site. See .paradigm/specs/wallet-checkout.md
+    "Hardening" for the manual provisioning follow-up.
 
 auth:
   symbol: "#auth-service"
   description: >
     Email + password accounts for the storefront demo. Passwords are bcrypt-hashed
     into the `users` table; createUser/authenticateUser issue a signed JWT whose
-    `sub` claim is the user id and `aud` claim is "user". signAgentGrant issues an
-    "agent"-audience grant for the agent path. verifyToken/verifyBearer check
-    signature + expiry and return the user id + audience, backing ^authenticated
-    (audience "user") and ^agent-authorized (audience "agent"). JWT_SECRET is read
-    lazily from env so unauthenticated routes still boot without it.
+    `sub` claim is the user id and `aud` claim is "user". signAgentGrant(user, grantJti)
+    issues an "agent"-audience grant for the agent path, with grantJti as the JWT `jti`
+    claim so #agent-grants-service can tie the token to its own scoped spend-policy row.
+    verifyToken/verifyBearer check signature + expiry and return the user id + audience
+    + grantJti (agent tokens only), backing ^authenticated (audience "user") and
+    ^agent-authorized (audience "agent"). JWT_SECRET is read lazily via
+    #secrets-service.getSecret() so unauthenticated routes still boot without it.
   gates: [^authenticated, ^agent-authorized]
   signals: [!user-registered, !user-logged-in]
   new_tables: [users]
   ponytail: >
     Tech-demo grade. Intentionally omitted: email verification, password reset,
-    rate limiting, refresh/rotation, token revocation (agent grants are long-lived
-    and not yet revocable). Min password length 6.
+    rate limiting, refresh/rotation. Grant JWTs themselves are still not directly
+    revocable (they're long-lived, 365d) — but #agent-grants-service's scoped policy
+    layered on top now IS revocable/expiring, so a leaked grant's ability to actually
+    spend money can be cut off even though the token itself keeps verifying. Min
+    password length 6.
 
 orders:
   symbol: "#orders-service"
   description: >
     Primitives shared by both checkout legs (#checkout-route, #agent-route): the
     products/orders schema, price lookup, the spend policy (per-tx $50 / daily $200
-    caps; $10 human auto-approve threshold), and order creation/status reads. Kept in
-    one module so the two sibling paths enforce identical rules and can't drift.
+    caps; $10 human auto-approve threshold), idempotent order reservation, and order
+    creation/status reads. Kept in one module so the two sibling paths enforce
+    identical rules and can't drift. reserveOrder() is the single write path both
+    legs use: it dedups a client resubmission (a client-supplied idempotencyKey in
+    the request body, or a fallback DEDUP_WINDOW_SECONDS=120s window keyed on
+    user+sku+quantity+amount when no token is supplied), then atomically evaluates
+    the spend policy and inserts the order inside one Postgres transaction holding a
+    `pg_advisory_xact_lock(hashtext(userId))` — serializing concurrent reservations
+    for the same user so the check-then-insert can't race. checkCirclePolicy() is a
+    currently-no-op extension point at the same call site, for Circle's server-side
+    Policy Engine (velocity limits, destination allow-listing) once that's enabled
+    account-side on mainnet. Full design in .paradigm/specs/wallet-checkout.md
+    ("Hardening" section). markOrderFailed(orderId, reason) is the transition callers
+    (#checkout-route, #verify-route's settleVerifiedSession) use when
+    executePayment()/transferUsdc() (or the markOrderPaid() write right after it)
+    throws — moves the order straight to 'failed' so it stops counting toward the
+    daily cap and stops wedging its idempotency key, instead of being left stuck
+    'pending' forever. findDuplicateOrder()'s client-key branch also reclaims a
+    'pending' order (no circle_transaction_id) older than STALE_PENDING_SECONDS=180s
+    the same way — marks it failed and frees its idempotency_key — so a client retry
+    with the same key isn't wedged behind a dead order from a payment call that threw
+    before this hardening existed (or a process that died mid-request). Orders also
+    carry an optional agent_grant_id (set only by #agent-route, via reserveOrder's
+    agentGrantId input) pointing at the #agent-grants-service row scoping that grant's
+    spend policy — null for human orders, deliberately no FK (the two schemas aren't
+    ordered relative to each other) — read back by #verify-route's
+    settleVerifiedSession() to enforce ^grant-scope-valid before charging.
   new_tables: [products, orders]
 
 payment:
@@ -52,6 +114,63 @@ verification:
   gates: [^personhood-verified]
   new_tables: [verification_sessions]
 
+agent-grants:
+  symbol: "#agent-grants-service"
+  description: >
+    App-level, revocable, expiring "session key" scoped to a single agent grant (a
+    Postgres-backed spend policy, NOT an on-chain session key — see
+    .paradigm/specs/wallet-checkout.md "Session-scoped agent grants"). recordAgentGrant()
+    is called once, alongside #agent-route.POST /agent/grant minting the JWT, storing
+    destination_address (always merchantPayoutAddress(), never client-supplied),
+    per_tx_cap_usdc/rolling_cap_usdc (default to #orders-service's PER_TX_CAP_USDC/
+    DAILY_CAP_USDC), and expires_at (AGENT_GRANT_SESSION_TTL_SECONDS, env, default 24h
+    — deliberately much shorter than the grant JWT's own 365d lifetime, so a leaked JWT
+    stops being able to spend on its own schedule, not the JWT's). revokeAgentGrant(id,
+    userId) sets revoked_at early, scoped to the grant's owner. evaluateGrantScope(grant,
+    order) — called from #verify-route's settleVerifiedSession() right before charging,
+    for agent-initiated orders only — checks revocation, expiry, destination match, the
+    per-tx cap, and a rolling-24h sum of that grant's non-failed/denied/cancelled orders
+    against the rolling cap; a denial marks the order failed instead of charging. This
+    layers on top of, and never replaces, #orders-service's app-wide spend caps. Real
+    on-chain enforcement (ERC-4337 session keys scoped to a Smart Contract Account) is a
+    named, deferred follow-up requiring a Solidity module and an audit this pass
+    doesn't have — see #wallet-service.walletAccountType() for the SCA-wallet
+    groundwork that would sit underneath it.
+  gates: [^grant-scope-valid]
+  new_tables: [agent_grants]
+
+ledger-confirm:
+  symbol: "#ledger-confirm-service"
+  description: >
+    ^ledger-confirmed: a physical Ledger device signs an EIP-712 typed-data struct
+    ({orderId, sku, quantity, amountUsdc, destinationAddress, nonce, expiresAt, chainId})
+    authorizing #payment-service to proceed — it does not itself submit the Circle
+    transfer. LEDGER_CONFIRM_MODE=mock (default) lets a click-through page
+    (GET /ledger/mock/:approvalId, #ledger-route) stand in for a real device;
+    LEDGER_CONFIRM_MODE=ledger expects a real signature from the enrolled device via
+    a companion process (see .paradigm/specs/wallet-checkout.md "Ledger confirmation
+    gate" — that companion daemon and real @ledgerhq/* hardware integration are a
+    follow-up, not built this pass). requestApproval(order) is idempotent per order
+    (advisory-locked on hashtext(orderId), mirroring #orders-service.reserveOrder) —
+    a resubmission (deduped order) reuses the same pending/resolved approval row
+    rather than minting a second one, so nonce consumption stays scoped 1:1 to the
+    order's idempotency key. verifyApproval(approvalId, signerAddress, signature)
+    ALWAYS reconstructs the signed hash from the STORED order_snapshot (never from
+    caller-echoed fields) and resolves pending -> approved/denied inside one
+    transaction with the nonce consumption, so a signature over tampered
+    amount/destination, a wrong signer, an expired approval, or a replay against an
+    already-resolved row all fail closed (never left dangling 'pending'). Structural
+    enforcement: #payment-service.executePayment() takes the full OrderRow (not
+    discrete fields) and itself looks up getEnrolledDevice()/getApprovalForOrder()
+    before proceeding — callers cannot skip the check by calling executePayment()
+    differently. Users with no enrolled device are entirely unaffected (existing
+    checkoutConfirmed/personhood-only behavior). resolveLedgerGate(order) is the
+    shared read used by #checkout-route and #verify-route to decide
+    not_required/pending/approved/denied.
+  gates: [^ledger-confirmed]
+  signals: [!ledger-device-enrolled, !ledger-approval-verified]
+  new_tables: [ledger_devices, ledger_approvals]
+
 worldid:
   symbol: "#worldid-service"
   description: >
@@ -60,5 +179,6 @@ worldid:
     (@worldcoin/idkit-core signRequest) to build the RpContext the SPA's IDKit widget
     needs (credential "selfie"), binding each proof to a per-session action; and verifies
     returned proofs via POST developer.world.org/api/v4/verify/{rp_id}. app_id/rp_id are
-    public; the signing key is secret and never sent to the client.
+    public; the signing key (read via #secrets-service.getSecret()) is secret and
+    never sent to the client.
   gates: [^personhood-verified]

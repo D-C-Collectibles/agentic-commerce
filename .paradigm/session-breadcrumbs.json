@@ -1,55 +1,31 @@
 {
-  "sessionId": "smtnu5x0e",
-  "startTime": 1788579684446,
-  "lastActivity": 1788663876307,
+  "sessionId": "smtulloep",
+  "startTime": 1788988566481,
+  "lastActivity": 1788989826991,
   "breadcrumbs": [
     {
-      "timestamp": 1788579706115,
+      "timestamp": 1788989113958,
       "action": "tool-call",
-      "tool": "paradigm_session_recover",
-      "summary": "session_recover"
+      "tool": "paradigm_protocol_search",
+      "summary": "protocol_search: auto-created custodial wallet abstraction per user for payme"
     },
     {
-      "timestamp": 1788654243031,
+      "timestamp": 1788989115099,
+      "action": "tool-call",
+      "tool": "paradigm_orchestrate_inline",
+      "summary": "orchestrate_inline: plan"
+    },
+    {
+      "timestamp": 1788989826984,
+      "action": "tool-call",
+      "tool": "paradigm_orchestrate_inline",
+      "summary": "orchestrate_inline: plan"
+    },
+    {
+      "timestamp": 1788990366421,
       "action": "tool-call",
       "tool": "paradigm_lore_record",
-      "summary": "lore_record: Design: agentic-purchase personhood gate + merchant MCP (sco"
-    },
-    {
-      "timestamp": 1788658799170,
-      "action": "tool-call",
-      "tool": "paradigm_lore_record",
-      "summary": "lore_record: Decision: Option A (async deep-link + poll) for agent-purcha"
-    },
-    {
-      "timestamp": 1788659762206,
-      "action": "tool-call",
-      "tool": "paradigm_reindex",
-      "summary": "Rebuilt static index files"
-    },
-    {
-      "timestamp": 1788660320655,
-      "action": "tool-call",
-      "tool": "paradigm_lore_record",
-      "summary": "lore_record: Built agent-purchase server path + merchant MCP (Option A, m"
-    },
-    {
-      "timestamp": 1788663846601,
-      "action": "tool-call",
-      "tool": "paradigm_reindex",
-      "summary": "Rebuilt static index files"
-    },
-    {
-      "timestamp": 1788663876156,
-      "action": "tool-call",
-      "tool": "paradigm_lore_record",
-      "summary": "lore_record: Wired real World ID Selfie Check (VERIFICATION_MODE=world)"
-    },
-    {
-      "timestamp": 1788667171751,
-      "action": "tool-call",
-      "tool": "paradigm_lore_record",
-      "summary": "lore_record: World ID live test: Selfie Check access-gated; fixed action "
+      "summary": "lore_record: Wallet custody hardening — Stage 1 (idempotency, spend-cap r"
     }
   ],
   "symbolsModified": [],

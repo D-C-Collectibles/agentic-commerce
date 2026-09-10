@@ -9,6 +9,7 @@
 
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { getSecret, SECRET_NAMES } from "../config/secrets.js";
 import { pool } from "../db.js";
 
 const BCRYPT_ROUNDS = 10;
@@ -42,12 +43,19 @@ export interface VerifiedToken {
   userId: string;
   email: string;
   audience: GrantAudience;
+  // The grant's own id (JWT `jti` claim), agent-audience tokens only. Lets the agent
+  // path (#agent-grants-service) resolve this specific grant's scoped spend policy
+  // row rather than treating every grant a user has ever minted as interchangeable.
+  // Undefined for user tokens and for agent grants minted before this claim existed
+  // (no scoped policy is enforced for those — see .paradigm/specs/wallet-checkout.md
+  // "Session-scoped agent grants").
+  grantJti?: string;
 }
 
 // Read lazily (not at import) so unauthenticated routes like GET /products still
 // boot when JWT_SECRET is unset. Only the auth path requires it.
 function jwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
+  const secret = getSecret(SECRET_NAMES.jwtSecret);
   if (!secret) {
     throw new Error("JWT_SECRET is not set (see server/.env.example)");
   }
@@ -85,12 +93,17 @@ function signToken(user: AuthUser): string {
 
 // Mints an agent grant for an already-authenticated user. The holder (an MCP server
 // on the user's machine) can query and initiate purchases on the user's behalf, but
-// every purchase it starts is forced down the ^personhood-verified path.
-export function signAgentGrant(user: AuthUser): string {
+// every purchase it starts is forced down the ^personhood-verified path. `grantJti`
+// becomes the JWT's `jti` claim, letting #agent-grants-service tie this specific
+// grant to its own scoped spend-policy row (see .paradigm/specs/wallet-checkout.md
+// "Session-scoped agent grants") — the caller (#agent-route) generates it and
+// records the matching policy row so the two are always minted together.
+export function signAgentGrant(user: AuthUser, grantJti: string): string {
   return jwt.sign({ email: user.email }, jwtSecret(), {
     subject: user.id,
     audience: GRANT_AUDIENCE.agent,
     expiresIn: AGENT_GRANT_TTL,
+    jwtid: grantJti,
   });
 }
 
@@ -106,7 +119,8 @@ export function verifyToken(token: string | undefined): VerifiedToken | null {
     if (typeof sub !== "string" || !sub) return null;
     const audience = payload.aud === GRANT_AUDIENCE.agent ? GRANT_AUDIENCE.agent : GRANT_AUDIENCE.user;
     const email = typeof payload.email === "string" ? payload.email : "";
-    return { userId: sub, email, audience };
+    const grantJti = typeof payload.jti === "string" ? payload.jti : undefined;
+    return { userId: sub, email, audience, grantJti };
   } catch {
     return null;
   }
